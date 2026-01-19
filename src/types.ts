@@ -9,6 +9,16 @@ export const ApiResponseSchema = <T extends z.ZodTypeAny>(resultSchema: T) =>
 		result: resultSchema,
 	});
 
+// Nullable version for endpoints that may return null
+export const NullableApiResponseSchema = <T extends z.ZodTypeAny>(
+	resultSchema: T,
+) =>
+	z.object({
+		errno: z.number(),
+		errmsg: z.string(),
+		result: resultSchema.nullable(),
+	});
+
 // Market status enum (numeric)
 export const MarketStatusEnum = {
 	CREATED: 1,

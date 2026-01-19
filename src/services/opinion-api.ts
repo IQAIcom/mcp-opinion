@@ -5,13 +5,14 @@ import { fetchJson } from "../lib/http.js";
 import {
 	ApiResponseSchema,
 	type CategoricalMarket,
-	CategoricalMarketSchema,
+	CategoricalMarketDetailSchema,
 	type LatestPrice,
 	LatestPriceSchema,
 	type Market,
-	MarketSchema,
+	MarketDetailSchema,
 	type MarketsList,
 	MarketsListSchema,
+	NullableApiResponseSchema,
 	type OrderBook,
 	OrderBookSchema,
 	type PositionsList,
@@ -27,7 +28,7 @@ import {
 export interface GetMarketsParams {
 	page?: number;
 	limit?: number;
-	status?: "activated" | "resolved";
+	status?: number; // 1=CREATED, 2=ACTIVATED, 3=RESOLVING, 4=RESOLVED
 	marketType?: 0 | 1 | 2; // 0=Binary, 1=Categorical, 2=All
 	sortBy?: number;
 }
@@ -63,9 +64,13 @@ export class OpinionAPIService {
 		}
 	}
 
-	private handleResponse<T>(data: { code: number; msg: string; result: T }): T {
-		if (data.code !== API_RESPONSE_CODE.SUCCESS) {
-			throw new Error(`Opinion API Error: ${data.msg}`);
+	private handleResponse<T>(data: {
+		errno: number;
+		errmsg: string;
+		result: T;
+	}): T {
+		if (data.errno !== API_RESPONSE_CODE.SUCCESS) {
+			throw new Error(`Opinion API Error: ${data.errmsg || "Unknown error"}`);
 		}
 		return data.result;
 	}
@@ -84,14 +89,14 @@ export class OpinionAPIService {
 		if (params?.limit !== undefined) {
 			url.searchParams.append("limit", params.limit.toString());
 		}
-		if (params?.status) {
-			url.searchParams.append("status", params.status);
+		if (params?.status !== undefined) {
+			url.searchParams.append("status", params.status.toString());
 		}
 		if (params?.marketType !== undefined) {
-			url.searchParams.append("market_type", params.marketType.toString());
+			url.searchParams.append("marketType", params.marketType.toString());
 		}
 		if (params?.sortBy !== undefined) {
-			url.searchParams.append("sort_by", params.sortBy.toString());
+			url.searchParams.append("sortBy", params.sortBy.toString());
 		}
 
 		const responseSchema = ApiResponseSchema(MarketsListSchema);
@@ -111,7 +116,7 @@ export class OpinionAPIService {
 		this.validateApiKey();
 
 		const url = `${this.baseUrl}/market/${marketId}`;
-		const responseSchema = ApiResponseSchema(MarketSchema);
+		const responseSchema = ApiResponseSchema(MarketDetailSchema);
 
 		const data = await fetchJson(
 			url,
@@ -119,7 +124,7 @@ export class OpinionAPIService {
 			responseSchema,
 		);
 
-		return this.handleResponse(data);
+		return this.handleResponse(data).data;
 	}
 
 	/**
@@ -129,7 +134,7 @@ export class OpinionAPIService {
 		this.validateApiKey();
 
 		const url = `${this.baseUrl}/market/categorical/${marketId}`;
-		const responseSchema = ApiResponseSchema(CategoricalMarketSchema);
+		const responseSchema = ApiResponseSchema(CategoricalMarketDetailSchema);
 
 		const data = await fetchJson(
 			url,
@@ -137,19 +142,19 @@ export class OpinionAPIService {
 			responseSchema,
 		);
 
-		return this.handleResponse(data);
+		return this.handleResponse(data).data;
 	}
 
 	/**
 	 * Get the latest trade price for a token
 	 */
-	async getLatestPrice(tokenId: string): Promise<LatestPrice> {
+	async getLatestPrice(tokenId: string): Promise<LatestPrice | null> {
 		this.validateApiKey();
 
 		const url = new URL(`${this.baseUrl}/token/latest-price`);
 		url.searchParams.append("token_id", tokenId);
 
-		const responseSchema = ApiResponseSchema(LatestPriceSchema);
+		const responseSchema = NullableApiResponseSchema(LatestPriceSchema);
 
 		const data = await fetchJson(
 			url.toString(),
@@ -163,13 +168,13 @@ export class OpinionAPIService {
 	/**
 	 * Get the order book (bids and asks) for a token
 	 */
-	async getOrderbook(tokenId: string): Promise<OrderBook> {
+	async getOrderbook(tokenId: string): Promise<OrderBook | null> {
 		this.validateApiKey();
 
 		const url = new URL(`${this.baseUrl}/token/orderbook`);
 		url.searchParams.append("token_id", tokenId);
 
-		const responseSchema = ApiResponseSchema(OrderBookSchema);
+		const responseSchema = NullableApiResponseSchema(OrderBookSchema);
 
 		const data = await fetchJson(
 			url.toString(),
@@ -186,14 +191,14 @@ export class OpinionAPIService {
 	async getPriceHistory(
 		tokenId: string,
 		interval: PriceInterval = "1h",
-	): Promise<PriceHistory> {
+	): Promise<PriceHistory | null> {
 		this.validateApiKey();
 
 		const url = new URL(`${this.baseUrl}/token/price-history`);
 		url.searchParams.append("token_id", tokenId);
 		url.searchParams.append("interval", interval);
 
-		const responseSchema = ApiResponseSchema(PriceHistorySchema);
+		const responseSchema = NullableApiResponseSchema(PriceHistorySchema);
 
 		const data = await fetchJson(
 			url.toString(),

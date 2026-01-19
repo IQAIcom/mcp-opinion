@@ -19,6 +19,10 @@ export const getOrderbookTool = {
 		try {
 			const orderbook = await apiService.getOrderbook(params.tokenId);
 
+			if (!orderbook) {
+				return `No order book data available for token ${params.tokenId}. The token may not exist or have no active orders.`;
+			}
+
 			const formatOrders = (
 				orders: Array<{ price: string; size: string }>,
 				type: string,
@@ -40,9 +44,13 @@ export const getOrderbookTool = {
 					? orderbook.asks[0].price
 					: "N/A";
 
+			const timestamp = orderbook.timestamp
+				? new Date(orderbook.timestamp * 1000).toISOString()
+				: "";
+
 			return dedent`
         Order Book for Token: ${params.tokenId}
-        ${orderbook.timestamp ? `Timestamp: ${orderbook.timestamp}` : ""}
+        ${timestamp ? `Timestamp: ${timestamp}` : ""}
 
         Best Bid: ${bestBid}
         Best Ask: ${bestAsk}
