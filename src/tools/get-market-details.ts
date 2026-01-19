@@ -1,6 +1,7 @@
 import dedent from "dedent";
 import { z } from "zod";
 import { OpinionAPIService } from "../services/opinion-api.js";
+import { getStatusLabel } from "../types.js";
 
 const getMarketDetailsParams = z.object({
 	marketId: z.number().describe("The unique identifier of the market"),
@@ -19,35 +20,46 @@ export const getMarketDetailsTool = {
 		try {
 			const market = await apiService.getMarketDetails(params.marketId);
 
-			const tokens =
-				market.tokens
-					?.map(
-						(t) =>
-							`  - ${t.outcome}: ${t.token_id}${t.winner ? " (Winner)" : ""}`,
-					)
-					.join("\n") || "  No tokens available";
+			// Format tokens based on market type
+			let tokensInfo: string;
+			if (market.marketType === 0) {
+				// Binary market
+				tokensInfo = dedent`
+          ${market.yesLabel || "Yes"}: ${market.yesTokenId || "N/A"}
+          ${market.noLabel || "No"}: ${market.noTokenId || "N/A"}
+        `;
+			} else {
+				// Categorical - try to get from categorical endpoint
+				tokensInfo = "Use categorical endpoint for options";
+			}
+
+			const formatTimestamp = (ts: number | null | undefined) => {
+				if (!ts) return "N/A";
+				return new Date(ts * 1000).toISOString();
+			};
 
 			return dedent`
         Market Details:
 
-        ID: ${market.market_id}
-        Question: ${market.question}
-        Description: ${market.description || "N/A"}
-        Type: ${market.market_type === 0 ? "Binary" : "Categorical"}
-        Status: ${market.status}
+        ID: ${market.marketId}
+        Title: ${market.marketTitle}
+        Type: ${market.marketType === 0 ? "Binary" : "Categorical"}
+        Status: ${getStatusLabel(market.status)}
         
         Volume: ${market.volume || "N/A"}
-        Liquidity: ${market.liquidity || "N/A"}
+        Chain ID: ${market.chainId || "N/A"}
+        Quote Token: ${market.quoteToken || "N/A"}
         
-        End Date: ${market.end_date || "N/A"}
-        Created: ${market.created_at || "N/A"}
-        Updated: ${market.updated_at || "N/A"}
+        Cutoff: ${formatTimestamp(market.cutoffAt)}
+        Resolved: ${formatTimestamp(market.resolvedAt)}
         
-        Resolution Source: ${market.resolution_source || "N/A"}
-        Tags: ${market.tags?.join(", ") || "N/A"}
+        Rules: ${market.rules || "N/A"}
         
         Tokens:
-        ${tokens}
+        ${tokensInfo}
+        
+        ${market.resultTokenId ? `Winner Token: ${market.resultTokenId}` : ""}
+        ${market.conditionId ? `Condition ID: ${market.conditionId}` : ""}
       `;
 		} catch (error) {
 			if (error instanceof Error) {

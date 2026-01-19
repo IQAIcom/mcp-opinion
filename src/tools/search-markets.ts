@@ -1,12 +1,10 @@
 import dedent from "dedent";
 import { z } from "zod";
 import { OpinionAPIService } from "../services/opinion-api.js";
+import { getStatusLabel } from "../types.js";
 
 const searchMarketsParams = z.object({
-	query: z
-		.string()
-		.min(1)
-		.describe("Search keyword to find in market questions"),
+	query: z.string().min(1).describe("Search keyword to find in market titles"),
 	limit: z
 		.number()
 		.min(1)
@@ -14,17 +12,18 @@ const searchMarketsParams = z.object({
 		.default(10)
 		.describe("Maximum number of results to return"),
 	status: z
-		.enum(["activated", "resolved"])
+		.number()
+		.min(1)
+		.max(4)
 		.optional()
-		.describe("Filter by market status"),
+		.describe("Filter by status: 1=Created, 2=Active, 3=Resolving, 4=Resolved"),
 });
 
 type SearchMarketsParams = z.infer<typeof searchMarketsParams>;
 
 export const searchMarketsTool = {
 	name: "SEARCH_MARKETS",
-	description:
-		"Search for prediction markets by keyword in the market question",
+	description: "Search for prediction markets by keyword in the market title",
 	parameters: searchMarketsParams,
 	execute: async (params: SearchMarketsParams) => {
 		const apiService = new OpinionAPIService();
@@ -45,9 +44,8 @@ export const searchMarketsTool = {
 			const matchingMarkets = result.list
 				.filter(
 					(market) =>
-						market.question.toLowerCase().includes(queryLower) ||
-						market.description?.toLowerCase().includes(queryLower) ||
-						market.tags?.some((tag) => tag.toLowerCase().includes(queryLower)),
+						market.marketTitle.toLowerCase().includes(queryLower) ||
+						market.rules?.toLowerCase().includes(queryLower),
 				)
 				.slice(0, params.limit);
 
@@ -57,14 +55,15 @@ export const searchMarketsTool = {
 
 			const marketSummaries = matchingMarkets.map((market) => {
 				const tokens =
-					market.tokens?.map((t) => `${t.outcome}: ${t.token_id}`).join(", ") ||
-					"N/A";
+					market.marketType === 0
+						? `Yes: ${market.yesTokenId || "N/A"}, No: ${market.noTokenId || "N/A"}`
+						: "Categorical";
 
 				return dedent`
-          Market ID: ${market.market_id}
-          Question: ${market.question}
-          Type: ${market.market_type === 0 ? "Binary" : "Categorical"}
-          Status: ${market.status}
+          Market ID: ${market.marketId}
+          Title: ${market.marketTitle}
+          Type: ${market.marketType === 0 ? "Binary" : "Categorical"}
+          Status: ${getStatusLabel(market.status)}
           Volume: ${market.volume || "N/A"}
           Tokens: ${tokens}
         `;

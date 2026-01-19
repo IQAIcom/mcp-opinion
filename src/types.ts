@@ -1,40 +1,44 @@
 // src/types.ts
 import { z } from "zod";
 
-// Generic API response wrapper
+// Generic API response wrapper (Opinion uses errno/errmsg)
 export const ApiResponseSchema = <T extends z.ZodTypeAny>(resultSchema: T) =>
 	z.object({
-		code: z.number(),
-		msg: z.string(),
+		errno: z.number(),
+		errmsg: z.string(),
 		result: resultSchema,
 	});
 
-// Token schema
-export const TokenSchema = z.object({
-	token_id: z.string(),
-	outcome: z.string(),
-	market_id: z.number(),
-	winner: z.boolean().optional(),
-});
+// Market status enum (numeric)
+export const MarketStatusEnum = {
+	CREATED: 1,
+	ACTIVATED: 2,
+	RESOLVING: 3,
+	RESOLVED: 4,
+} as const;
 
-export type Token = z.infer<typeof TokenSchema>;
-
-// Market schema
+// Market schema matching actual Opinion API
 export const MarketSchema = z.object({
-	market_id: z.number(),
-	question: z.string(),
-	description: z.string().optional(),
-	market_type: z.number(), // 0=Binary, 1=Categorical
-	status: z.string(), // activated, resolved
-	end_date: z.string().optional(),
-	created_at: z.string().optional(),
-	updated_at: z.string().optional(),
+	marketId: z.number(),
+	marketTitle: z.string(),
+	status: z.number(), // 1=CREATED, 2=ACTIVATED, 3=RESOLVING, 4=RESOLVED
+	marketType: z.number(), // 0=Binary, 1=Categorical
+	conditionId: z.string().optional(),
+	quoteToken: z.string().optional(),
+	chainId: z.string().optional(),
 	volume: z.string().optional(),
-	liquidity: z.string().optional(),
-	tokens: z.array(TokenSchema).optional(),
+	yesTokenId: z.string().optional(),
+	noTokenId: z.string().optional(),
+	resultTokenId: z.string().nullable().optional(),
+	yesLabel: z.string().optional(),
+	noLabel: z.string().optional(),
+	rules: z.string().optional(),
+	cutoffAt: z.number().nullable().optional(),
+	resolvedAt: z.number().nullable().optional(),
+	// Additional fields that may be present
+	description: z.string().optional(),
+	imageUrl: z.string().optional(),
 	tags: z.array(z.string()).optional(),
-	image_url: z.string().optional(),
-	resolution_source: z.string().optional(),
 });
 
 export type Market = z.infer<typeof MarketSchema>;
@@ -43,18 +47,36 @@ export type Market = z.infer<typeof MarketSchema>;
 export const MarketsListSchema = z.object({
 	list: z.array(MarketSchema),
 	total: z.number().optional(),
-	page: z.number().optional(),
-	limit: z.number().optional(),
 });
 
 export type MarketsList = z.infer<typeof MarketsListSchema>;
 
+// Market detail response (single market wrapped in data)
+export const MarketDetailSchema = z.object({
+	data: MarketSchema,
+});
+
+export type MarketDetail = z.infer<typeof MarketDetailSchema>;
+
+// Categorical market option
+export const CategoricalOptionSchema = z.object({
+	optionId: z.string().optional(),
+	label: z.string(),
+	tokenId: z.string(),
+	volume: z.string().optional(),
+});
+
 // Categorical market schema (extended)
 export const CategoricalMarketSchema = MarketSchema.extend({
-	outcomes: z.array(z.string()).optional(),
+	options: z.array(CategoricalOptionSchema).optional(),
 });
 
 export type CategoricalMarket = z.infer<typeof CategoricalMarketSchema>;
+
+// Categorical market detail response
+export const CategoricalMarketDetailSchema = z.object({
+	data: CategoricalMarketSchema,
+});
 
 // Order book entry
 export const OrderBookEntrySchema = z.object({
@@ -68,24 +90,24 @@ export type OrderBookEntry = z.infer<typeof OrderBookEntrySchema>;
 export const OrderBookSchema = z.object({
 	bids: z.array(OrderBookEntrySchema),
 	asks: z.array(OrderBookEntrySchema),
-	token_id: z.string().optional(),
-	timestamp: z.string().optional(),
+	tokenId: z.string().optional(),
+	timestamp: z.number().optional(),
 });
 
 export type OrderBook = z.infer<typeof OrderBookSchema>;
 
 // Latest price schema
 export const LatestPriceSchema = z.object({
-	token_id: z.string(),
+	tokenId: z.string(),
 	price: z.string(),
-	timestamp: z.string().optional(),
+	timestamp: z.number().optional(),
 });
 
 export type LatestPrice = z.infer<typeof LatestPriceSchema>;
 
 // Price history entry (OHLCV)
 export const PriceHistoryEntrySchema = z.object({
-	timestamp: z.string(),
+	timestamp: z.number(),
 	open: z.string(),
 	high: z.string(),
 	low: z.string(),
@@ -97,7 +119,7 @@ export type PriceHistoryEntry = z.infer<typeof PriceHistoryEntrySchema>;
 
 // Price history response
 export const PriceHistorySchema = z.object({
-	token_id: z.string().optional(),
+	tokenId: z.string().optional(),
 	interval: z.string().optional(),
 	history: z.array(PriceHistoryEntrySchema),
 });
@@ -106,14 +128,14 @@ export type PriceHistory = z.infer<typeof PriceHistorySchema>;
 
 // User position schema
 export const PositionSchema = z.object({
-	market_id: z.number(),
-	token_id: z.string(),
-	outcome: z.string(),
+	marketId: z.number(),
+	tokenId: z.string(),
+	outcome: z.string().optional(),
 	size: z.string(),
-	avg_price: z.string().optional(),
-	current_price: z.string().optional(),
+	avgPrice: z.string().optional(),
+	currentPrice: z.string().optional(),
 	pnl: z.string().optional(),
-	market_question: z.string().optional(),
+	marketTitle: z.string().optional(),
 });
 
 export type Position = z.infer<typeof PositionSchema>;
@@ -122,23 +144,21 @@ export type Position = z.infer<typeof PositionSchema>;
 export const PositionsListSchema = z.object({
 	list: z.array(PositionSchema),
 	total: z.number().optional(),
-	page: z.number().optional(),
-	limit: z.number().optional(),
 });
 
 export type PositionsList = z.infer<typeof PositionsListSchema>;
 
 // Trade schema
 export const TradeSchema = z.object({
-	trade_id: z.string().optional(),
-	market_id: z.number(),
-	token_id: z.string(),
+	tradeId: z.string().optional(),
+	marketId: z.number(),
+	tokenId: z.string(),
 	side: z.string(), // BUY or SELL
 	price: z.string(),
 	size: z.string(),
-	timestamp: z.string(),
+	timestamp: z.number(),
 	outcome: z.string().optional(),
-	market_question: z.string().optional(),
+	marketTitle: z.string().optional(),
 });
 
 export type Trade = z.infer<typeof TradeSchema>;
@@ -147,8 +167,6 @@ export type Trade = z.infer<typeof TradeSchema>;
 export const TradesListSchema = z.object({
 	list: z.array(TradeSchema),
 	total: z.number().optional(),
-	page: z.number().optional(),
-	limit: z.number().optional(),
 });
 
 export type TradesList = z.infer<typeof TradesListSchema>;
@@ -168,28 +186,18 @@ export const QuoteTokensListSchema = z.array(QuoteTokenSchema);
 
 export type QuoteTokensList = z.infer<typeof QuoteTokensListSchema>;
 
-// Type aliases for API responses
-export type MarketsApiResponse = z.infer<
-	ReturnType<typeof ApiResponseSchema<typeof MarketsListSchema>>
->;
-export type MarketApiResponse = z.infer<
-	ReturnType<typeof ApiResponseSchema<typeof MarketSchema>>
->;
-export type OrderBookApiResponse = z.infer<
-	ReturnType<typeof ApiResponseSchema<typeof OrderBookSchema>>
->;
-export type LatestPriceApiResponse = z.infer<
-	ReturnType<typeof ApiResponseSchema<typeof LatestPriceSchema>>
->;
-export type PriceHistoryApiResponse = z.infer<
-	ReturnType<typeof ApiResponseSchema<typeof PriceHistorySchema>>
->;
-export type PositionsApiResponse = z.infer<
-	ReturnType<typeof ApiResponseSchema<typeof PositionsListSchema>>
->;
-export type TradesApiResponse = z.infer<
-	ReturnType<typeof ApiResponseSchema<typeof TradesListSchema>>
->;
-export type QuoteTokensApiResponse = z.infer<
-	ReturnType<typeof ApiResponseSchema<typeof QuoteTokensListSchema>>
->;
+// Helper to get status label from number
+export function getStatusLabel(status: number): string {
+	switch (status) {
+		case MarketStatusEnum.CREATED:
+			return "Created";
+		case MarketStatusEnum.ACTIVATED:
+			return "Active";
+		case MarketStatusEnum.RESOLVING:
+			return "Resolving";
+		case MarketStatusEnum.RESOLVED:
+			return "Resolved";
+		default:
+			return `Unknown (${status})`;
+	}
+}

@@ -1,6 +1,7 @@
 import dedent from "dedent";
 import { z } from "zod";
 import { OpinionAPIService } from "../services/opinion-api.js";
+import { getStatusLabel } from "../types.js";
 
 const getMarketsParams = z.object({
 	limit: z
@@ -10,9 +11,11 @@ const getMarketsParams = z.object({
 		.default(10)
 		.describe("Number of markets to return (max 20)"),
 	status: z
-		.enum(["activated", "resolved"])
+		.number()
+		.min(1)
+		.max(4)
 		.optional()
-		.describe("Filter by market status"),
+		.describe("Filter by status: 1=Created, 2=Active, 3=Resolving, 4=Resolved"),
 	marketType: z
 		.number()
 		.min(0)
@@ -45,18 +48,20 @@ export const getMarketsTool = {
 			}
 
 			const marketSummaries = result.list.map((market) => {
+				// For binary markets, show Yes/No tokens
 				const tokens =
-					market.tokens?.map((t) => `${t.outcome}: ${t.token_id}`).join(", ") ||
-					"N/A";
+					market.marketType === 0
+						? `Yes: ${market.yesTokenId || "N/A"}, No: ${market.noTokenId || "N/A"}`
+						: "Categorical (use GET_MARKET_DETAILS for options)";
 
 				return dedent`
-          Market ID: ${market.market_id}
-          Question: ${market.question}
-          Type: ${market.market_type === 0 ? "Binary" : "Categorical"}
-          Status: ${market.status}
+          Market ID: ${market.marketId}
+          Title: ${market.marketTitle}
+          Type: ${market.marketType === 0 ? "Binary" : "Categorical"}
+          Status: ${getStatusLabel(market.status)}
           Volume: ${market.volume || "N/A"}
           Tokens: ${tokens}
-          Tags: ${market.tags?.join(", ") || "N/A"}
+          ${market.cutoffAt ? `Cutoff: ${new Date(market.cutoffAt * 1000).toISOString()}` : ""}
         `;
 			});
 
