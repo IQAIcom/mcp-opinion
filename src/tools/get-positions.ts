@@ -39,12 +39,12 @@ export const getPositionsTool = {
 				return `No positions found for wallet ${params.walletAddress}.`;
 			}
 
-		const positionSummaries = positions.list.map((position) => {
-			const pnlDisplay = position.unrealizedPnl
-				? `Unrealized PnL: ${Number.parseFloat(position.unrealizedPnl) >= 0 ? "+" : ""}${position.unrealizedPnl}${position.unrealizedPnlPercent ? ` (${Number.parseFloat(position.unrealizedPnlPercent) >= 0 ? "+" : ""}${position.unrealizedPnlPercent}%)` : ""}`
-				: "";
+			const positionSummaries = positions.list.map((position) => {
+				const pnlDisplay = position.unrealizedPnl
+					? `Unrealized PnL: ${Number.parseFloat(position.unrealizedPnl) >= 0 ? "+" : ""}${position.unrealizedPnl}${position.unrealizedPnlPercent ? ` (${Number.parseFloat(position.unrealizedPnlPercent) >= 0 ? "+" : ""}${position.unrealizedPnlPercent}%)` : ""}`
+					: "";
 
-			return dedent`
+				return dedent`
           Market ID: ${position.marketId}
           ${position.marketTitle ? `Title: ${position.marketTitle}` : ""}
           ${position.rootMarketTitle ? `Root Market: ${position.rootMarketTitle}` : ""}
@@ -57,12 +57,12 @@ export const getPositionsTool = {
           ${position.currentValueInQuoteToken ? `Current Value: ${position.currentValueInQuoteToken}` : ""}
           ${pnlDisplay}
         `;
-		});
+			});
 
-		// Calculate portfolio summary if we have PnL data
-		const totalPnl = positions.list
-			.filter((p) => p.unrealizedPnl)
-			.reduce((sum, p) => sum + Number.parseFloat(p.unrealizedPnl || "0"), 0);
+			// Calculate portfolio summary if we have PnL data
+			const totalPnl = positions.list
+				.filter((p) => p.unrealizedPnl)
+				.reduce((sum, p) => sum + Number.parseFloat(p.unrealizedPnl || "0"), 0);
 
 			return dedent`
         Positions for Wallet: ${params.walletAddress}

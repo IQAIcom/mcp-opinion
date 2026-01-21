@@ -1,0 +1,62 @@
+import dedent from "dedent";
+import { z } from "zod";
+import { ClobService } from "../services/clob-service.js";
+
+export const getBalancesTool = {
+	name: "GET_BALANCES",
+	description:
+		"Get your token balances on Opinion.trade. Requires OPINION_PRIVATE_KEY to be set.",
+	parameters: z.object({}),
+	execute: async () => {
+		try {
+			const clobService = new ClobService();
+			const result = await clobService.getMyBalances();
+
+			if (!result.success) {
+				return dedent`
+          Failed to fetch balances:
+          Error Code: ${result.errno}
+          Error Message: ${result.errmsg}
+          ${result.error ? `Details: ${result.error}` : ""}
+        `;
+			}
+
+			const balances = result.data as
+				| { balances?: unknown[]; data?: { balances?: unknown[] } }
+				| unknown[]
+				| null
+				| undefined;
+
+			if (!balances) {
+				return "No balance data available.";
+			}
+
+			const balanceList = Array.isArray(balances)
+				? balances
+				: (balances as { balances?: unknown[] })?.balances ||
+					(balances as { data?: { balances?: unknown[] } })?.data?.balances ||
+					[];
+
+			if (balanceList.length === 0) {
+				return "No token balances found.";
+			}
+
+			return dedent`
+        Token Balances:
+        
+        ${JSON.stringify(balanceList, null, 2)}
+      `;
+		} catch (error) {
+			if (error instanceof Error) {
+				if (error.message.includes("OPINION_PRIVATE_KEY")) {
+					return "Error: OPINION_PRIVATE_KEY environment variable is required for trading operations.";
+				}
+				if (error.message.includes("Python")) {
+					return `Error: ${error.message}. Make sure Python 3 and opinion-clob-sdk are installed (pip install opinion-clob-sdk).`;
+				}
+				return `Error fetching balances: ${error.message}`;
+			}
+			return "An unknown error occurred while fetching balances";
+		}
+	},
+} as const;

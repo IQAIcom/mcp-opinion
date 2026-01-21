@@ -40,9 +40,24 @@ To obtain an API key, apply through the [Opinion Builders Program](https://docs.
 # BNB Chain ID (default: 56 for mainnet, use 97 for testnet)
 OPINION_CHAIN_ID=56
 
-# Reserved for future trading support
+# Required for trading tools (see Trading Tools section)
 OPINION_PRIVATE_KEY=your_private_key_here
 ```
+
+### Private Key Setup
+
+The `OPINION_PRIVATE_KEY` is your wallet's private key (the same one you use with MetaMask or other wallets).
+
+**⚠️ Security Warning**: Never commit your private key to version control or share it publicly.
+
+**How to get your private key:**
+- **MetaMask**: Account menu → Account details → Show private key
+- **Other wallets**: Check your wallet's export/backup options
+
+**Best practices:**
+- Use a separate trading wallet with limited funds
+- Store the key securely (password manager, encrypted storage)
+- Use environment variables, never hardcode in files
 
 ## Claude Desktop Configuration
 
@@ -109,6 +124,17 @@ Or if published to npm:
 |------|-------------|
 | `GET_QUOTE_TOKENS` | List available quote currencies for trading |
 
+### Trading Tools (Requires OPINION_PRIVATE_KEY)
+
+| Tool | Description |
+|------|-------------|
+| `PLACE_ORDER` | Place a limit or market order |
+| `PLACE_MARKET_ORDER` | Place a market order (executes immediately) |
+| `CANCEL_ORDER` | Cancel an order by ID |
+| `GET_OPEN_ORDERS` | Get your open orders with optional filters |
+| `GET_BALANCES` | Get your token balances |
+| `APPROVE_ALLOWANCES` | Approve quote tokens for trading (required once) |
+
 ## Usage Examples
 
 ### List Active Markets
@@ -165,15 +191,69 @@ This MCP server uses the Opinion OpenAPI:
 - **Rate Limit**: 15 requests/second per API key
 - **Documentation**: [Opinion Developer Guide](https://docs.opinion.trade/developer-guide/opinion-open-api)
 
-## Future Enhancements
+## Trading Tools (Beta)
 
-Trading support via the Opinion CLOB SDK is planned for a future release. This will include:
+Trading tools are available when `OPINION_PRIVATE_KEY` is set. These tools use the Opinion CLOB SDK via a Python wrapper.
 
-- Place limit orders
-- Place market orders
-- Cancel orders
-- Manage open orders
-- Token approvals
+### Prerequisites
+
+1. **Python 3** installed on your system
+2. **Opinion CLOB SDK** installed:
+   
+   **Option 1: Using project virtual environment (recommended)**
+   ```bash
+   # Create virtual environment
+   python3 -m venv venv
+   
+   # Activate it
+   source venv/bin/activate  # On macOS/Linux
+   # or
+   venv\Scripts\activate     # On Windows
+   
+   # Install SDK
+   pip install -r requirements.txt
+   ```
+   
+   **Option 2: System-wide installation**
+   ```bash
+   pip install opinion-clob-sdk
+   # or with user flag on macOS
+   pip install --user opinion-clob-sdk
+   ```
+3. **OPINION_PRIVATE_KEY** environment variable set (see [Private Key Setup](#private-key-setup) below)
+
+### Available Trading Tools
+
+| Tool | Description |
+|------|-------------|
+| `PLACE_ORDER` | Place a limit or market order |
+| `PLACE_MARKET_ORDER` | Place a market order (executes immediately) |
+| `CANCEL_ORDER` | Cancel an order by ID |
+| `GET_OPEN_ORDERS` | Get your open orders with optional filters |
+| `GET_BALANCES` | Get your token balances |
+| `APPROVE_ALLOWANCES` | Approve quote tokens for trading (required once) |
+
+### Trading Configuration
+
+Add to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "opinion": {
+      "command": "node",
+      "args": ["/path/to/mcp-opinion/dist/index.js"],
+      "env": {
+        "OPINION_API_KEY": "your_api_key_here",
+        "OPINION_PRIVATE_KEY": "your_private_key_here",
+        "OPINION_CHAIN_ID": "56"
+      }
+    }
+  }
+}
+```
+
+**⚠️ Security Warning**: Never commit your private key to version control. Use environment variables or secure secret management.
 
 ## Related Projects
 

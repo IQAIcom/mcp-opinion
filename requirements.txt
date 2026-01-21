@@ -1,0 +1,5 @@
+# Opinion CLOB SDK for Python
+# Install with: pip install -r requirements.txt
+# Or: pip install opinion-clob-sdk
+
+opinion-clob-sdk>=0.5.2

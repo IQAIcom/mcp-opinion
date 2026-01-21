@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { FastMCP } from "fastmcp";
 import { APP_NAME, APP_VERSION } from "./constants.js";
+import { config } from "./lib/config.js";
 
 import { getLatestPriceTool } from "./tools/get-latest-price.js";
 import { getMarketDetailsTool } from "./tools/get-market-details.js";
@@ -12,6 +13,16 @@ import { getPriceHistoryTool } from "./tools/get-price-history.js";
 import { getQuoteTokensTool } from "./tools/get-quote-tokens.js";
 import { getTradeHistoryTool } from "./tools/get-trade-history.js";
 import { searchMarketsTool } from "./tools/search-markets.js";
+
+// Conditionally import trading tools
+import {
+	approveAllowancesTool,
+	cancelOrderTool,
+	getBalancesTool,
+	getOpenOrdersTool,
+	placeMarketOrderTool,
+	placeOrderTool,
+} from "./trading/tools/index.js";
 
 async function main() {
 	console.log(`Initializing ${APP_NAME}...`);
@@ -38,6 +49,20 @@ async function main() {
 	// Register reference tools
 	server.addTool(getQuoteTokensTool);
 
+	// Conditionally register trading tools if private key is available
+	const hasPrivateKey = !!config.opinion.privateKey;
+	if (hasPrivateKey) {
+		console.log("   Trading tools enabled (OPINION_PRIVATE_KEY detected)");
+		server.addTool(placeOrderTool);
+		server.addTool(placeMarketOrderTool);
+		server.addTool(cancelOrderTool);
+		server.addTool(getOpenOrdersTool);
+		server.addTool(getBalancesTool);
+		server.addTool(approveAllowancesTool);
+	} else {
+		console.log("   Trading tools disabled (OPINION_PRIVATE_KEY not set)");
+	}
+
 	try {
 		await server.start({
 			transportType: "stdio",
@@ -55,6 +80,16 @@ async function main() {
 		console.log("   - GET_POSITIONS: Get user positions by wallet");
 		console.log("   - GET_TRADE_HISTORY: Get user trade history");
 		console.log("   - GET_QUOTE_TOKENS: List available quote currencies");
+		if (hasPrivateKey) {
+			console.log("");
+			console.log("   Trading tools (requires OPINION_PRIVATE_KEY):");
+			console.log("   - PLACE_ORDER: Place a limit or market order");
+			console.log("   - PLACE_MARKET_ORDER: Place a market order");
+			console.log("   - CANCEL_ORDER: Cancel an order by ID");
+			console.log("   - GET_OPEN_ORDERS: Get your open orders");
+			console.log("   - GET_BALANCES: Get your token balances");
+			console.log("   - APPROVE_ALLOWANCES: Approve tokens for trading");
+		}
 	} catch (error) {
 		console.error(`❌ Failed to start ${APP_NAME}:`, error);
 		process.exit(1);

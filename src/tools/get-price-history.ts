@@ -50,9 +50,10 @@ export const getPriceHistoryTool = {
 			const latestPrice = prices[0]; // Most recent first
 			const earliestPrice = prices[prices.length - 1];
 			const priceChange = latestPrice - earliestPrice;
-			const priceChangePercent = earliestPrice !== 0
-				? ((priceChange / earliestPrice) * 100).toFixed(2)
-				: "0.00";
+			const priceChangePercent =
+				earliestPrice !== 0
+					? ((priceChange / earliestPrice) * 100).toFixed(2)
+					: "0.00";
 
 			return dedent`
         Price History for Token: ${params.tokenId}
