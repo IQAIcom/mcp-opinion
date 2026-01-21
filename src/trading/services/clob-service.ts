@@ -65,9 +65,28 @@ export class ClobService {
 	};
 
 	constructor() {
-		if (!config.opinion.privateKey) {
-			throw new Error("OPINION_PRIVATE_KEY is required for trading operations");
+		const privateKey = config.opinion.privateKey?.trim();
+		if (!privateKey || privateKey.length === 0) {
+			throw new Error(
+				"OPINION_PRIVATE_KEY is required for trading operations. Please set it as an environment variable.",
+			);
 		}
+
+		// Validate private key format (should be 64 hex characters + optional 0x prefix = 66 chars total)
+		const keyWithoutPrefix = privateKey.startsWith("0x")
+			? privateKey.slice(2)
+			: privateKey;
+		
+		if (keyWithoutPrefix.length !== 64 || !/^[0-9a-fA-F]+$/.test(keyWithoutPrefix)) {
+			throw new Error(
+				"OPINION_PRIVATE_KEY must be a valid 64-character hexadecimal string (with or without 0x prefix)",
+			);
+		}
+
+		// Ensure private key starts with 0x if it doesn't already
+		const normalizedPrivateKey = privateKey.startsWith("0x")
+			? privateKey
+			: `0x${privateKey}`;
 
 		this.config = {
 			host: "https://proxy.opinion.trade:8443",
@@ -77,7 +96,7 @@ export class ClobService {
 				config.opinion.chainId === 56
 					? "https://bsc-dataseed.binance.org"
 					: "https://data-seed-prebsc-1-s1.binance.org:8545",
-			privateKey: config.opinion.privateKey,
+			privateKey: normalizedPrivateKey,
 		};
 	}
 

@@ -23,12 +23,20 @@ except ImportError:
 
 def create_client(config: Dict[str, Any]) -> Client:
     """Create and return a configured CLOB client"""
+    private_key = config.get("privateKey", "").strip()
+    if not private_key:
+        raise ValueError("privateKey is required and cannot be empty")
+    
+    # Ensure private key starts with 0x
+    if not private_key.startswith("0x"):
+        private_key = f"0x{private_key}"
+    
     return Client(
         host=config.get("host", "https://proxy.opinion.trade:8443"),
         apikey=config.get("apikey", ""),
         chain_id=config.get("chainId", 56),
         rpc_url=config.get("rpcUrl", "https://bsc-dataseed.binance.org"),
-        private_key=config.get("privateKey", ""),
+        private_key=private_key,
         multi_sig_addr=config.get("multiSigAddr", ""),
     )
 
