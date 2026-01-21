@@ -130,16 +130,31 @@ export const PriceHistoryRawSchema = z.object({
 
 export type PriceHistory = z.infer<typeof PriceHistoryRawSchema>;
 
-// User position schema
+// User position schema - matches actual API response
 export const PositionSchema = z.object({
 	marketId: z.number(),
-	tokenId: z.string(),
-	outcome: z.string().optional(),
-	size: z.string(),
-	avgPrice: z.string().optional(),
-	currentPrice: z.string().optional(),
-	pnl: z.string().optional(),
 	marketTitle: z.string().optional(),
+	marketStatus: z.number().optional(),
+	marketStatusEnum: z.string().optional(),
+	marketCutoffAt: z.number().optional(),
+	rootMarketId: z.number().optional(),
+	rootMarketTitle: z.string().optional(),
+	outcome: z.string().optional(),
+	outcomeSide: z.number().optional(),
+	outcomeSideEnum: z.string().optional(),
+	sharesOwned: z.string(),
+	sharesFrozen: z.string().optional(),
+	unrealizedPnl: z.string().optional(),
+	unrealizedPnlPercent: z.string().optional(),
+	dailyPnlChange: z.string().optional(),
+	dailyPnlChangePercent: z.string().optional(),
+	conditionId: z.string().optional(),
+	tokenId: z.string(),
+	currentValueInQuoteToken: z.string().optional(),
+	avgEntryPrice: z.string().optional(),
+	claimStatus: z.number().optional(),
+	claimStatusEnum: z.string().optional(),
+	quoteToken: z.string().optional(),
 });
 
 export type Position = z.infer<typeof PositionSchema>;

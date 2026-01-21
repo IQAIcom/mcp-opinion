@@ -39,27 +39,30 @@ export const getPositionsTool = {
 				return `No positions found for wallet ${params.walletAddress}.`;
 			}
 
-			const positionSummaries = positions.list.map((position) => {
-				const pnlDisplay = position.pnl
-					? `PnL: ${Number.parseFloat(position.pnl) >= 0 ? "+" : ""}${position.pnl}`
-					: "";
+		const positionSummaries = positions.list.map((position) => {
+			const pnlDisplay = position.unrealizedPnl
+				? `Unrealized PnL: ${Number.parseFloat(position.unrealizedPnl) >= 0 ? "+" : ""}${position.unrealizedPnl}${position.unrealizedPnlPercent ? ` (${Number.parseFloat(position.unrealizedPnlPercent) >= 0 ? "+" : ""}${position.unrealizedPnlPercent}%)` : ""}`
+				: "";
 
-				return dedent`
-          Market ID: ${position.market_id}
-          ${position.market_question ? `Question: ${position.market_question}` : ""}
-          Token: ${position.token_id}
-          Outcome: ${position.outcome}
-          Size: ${position.size}
-          ${position.avg_price ? `Average Price: ${position.avg_price}` : ""}
-          ${position.current_price ? `Current Price: ${position.current_price}` : ""}
+			return dedent`
+          Market ID: ${position.marketId}
+          ${position.marketTitle ? `Title: ${position.marketTitle}` : ""}
+          ${position.rootMarketTitle ? `Root Market: ${position.rootMarketTitle}` : ""}
+          ${position.marketStatusEnum ? `Status: ${position.marketStatusEnum}` : ""}
+          Token: ${position.tokenId}
+          ${position.outcome ? `Outcome: ${position.outcome}` : ""}
+          Shares Owned: ${position.sharesOwned}
+          ${position.sharesFrozen ? `Shares Frozen: ${position.sharesFrozen}` : ""}
+          ${position.avgEntryPrice ? `Avg Entry Price: ${position.avgEntryPrice}` : ""}
+          ${position.currentValueInQuoteToken ? `Current Value: ${position.currentValueInQuoteToken}` : ""}
           ${pnlDisplay}
         `;
-			});
+		});
 
-			// Calculate portfolio summary if we have current prices
-			const totalPnl = positions.list
-				.filter((p) => p.pnl)
-				.reduce((sum, p) => sum + Number.parseFloat(p.pnl || "0"), 0);
+		// Calculate portfolio summary if we have PnL data
+		const totalPnl = positions.list
+			.filter((p) => p.unrealizedPnl)
+			.reduce((sum, p) => sum + Number.parseFloat(p.unrealizedPnl || "0"), 0);
 
 			return dedent`
         Positions for Wallet: ${params.walletAddress}

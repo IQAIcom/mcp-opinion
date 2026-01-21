@@ -218,7 +218,7 @@ export class OpinionAPIService {
 	): Promise<PositionsList> {
 		this.validateApiKey();
 
-		const url = new URL(`${this.baseUrl}/position/user/${walletAddress}`);
+		const url = new URL(`${this.baseUrl}/positions/user/${walletAddress}`);
 
 		if (params?.page !== undefined) {
 			url.searchParams.append("page", params.page.toString());
