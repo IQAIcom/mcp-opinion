@@ -22,16 +22,24 @@ export const getLatestPriceTool = {
 		try {
 			const priceData = await apiService.getLatestPrice(params.tokenId);
 
+			if (!priceData) {
+				return `No price data available for token ${params.tokenId}. The token may not exist or have no trades yet.`;
+			}
+
 			// Convert price to percentage for prediction markets (prices are 0-1)
 			const priceNum = Number.parseFloat(priceData.price);
 			const impliedProbability = (priceNum * 100).toFixed(1);
 
+			const timestamp = priceData.timestamp
+				? new Date(priceData.timestamp * 1000).toISOString()
+				: "";
+
 			return dedent`
-        Latest Price for Token: ${priceData.token_id}
+        Latest Price for Token: ${priceData.tokenId}
 
         Price: ${priceData.price}
         Implied Probability: ${impliedProbability}%
-        ${priceData.timestamp ? `Last Updated: ${priceData.timestamp}` : ""}
+        ${timestamp ? `Last Updated: ${timestamp}` : ""}
 
         Note: In prediction markets, the price represents the market's implied probability 
         that the outcome will occur. A price of 0.65 means the market estimates a 65% chance.
