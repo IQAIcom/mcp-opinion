@@ -152,24 +152,36 @@ export const PositionsListSchema = z.object({
 
 export type PositionsList = z.infer<typeof PositionsListSchema>;
 
-// Trade schema
+// Trade schema - matches actual API response
 export const TradeSchema = z.object({
-	tradeId: z.string().optional(),
+	txHash: z.string(),
 	marketId: z.number(),
-	tokenId: z.string(),
-	side: z.string(), // BUY or SELL
-	price: z.string(),
-	size: z.string(),
-	timestamp: z.number(),
-	outcome: z.string().optional(),
 	marketTitle: z.string().optional(),
+	rootMarketId: z.number().optional(),
+	rootMarketTitle: z.string().optional(),
+	side: z.string(), // "Buy" or "Sell"
+	outcome: z.string().optional(),
+	outcomeSide: z.number().optional(),
+	outcomeSideEnum: z.string().optional(),
+	price: z.string(),
+	shares: z.string(),
+	amount: z.string(),
+	fee: z.string().optional(),
+	profit: z.string().optional(),
+	quoteToken: z.string().optional(),
+	quoteTokenUsdPrice: z.string().optional(),
+	usdAmount: z.string().optional(),
+	status: z.number().optional(),
+	statusEnum: z.string().optional(),
+	chainId: z.string().optional(),
+	createdAt: z.number(),
 });
 
 export type Trade = z.infer<typeof TradeSchema>;
 
-// Trades list response
+// Trades list response (list can be null if no trades)
 export const TradesListSchema = z.object({
-	list: z.array(TradeSchema),
+	list: z.array(TradeSchema).nullable(),
 	total: z.number().optional(),
 });
 

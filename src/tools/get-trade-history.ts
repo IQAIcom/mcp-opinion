@@ -35,40 +35,41 @@ export const getTradeHistoryTool = {
 				return `No trade history found for wallet ${params.walletAddress}.`;
 			}
 
-			const tradeSummaries = trades.list.map((trade) => {
-				const sideEmoji = trade.side === "BUY" ? "📈" : "📉";
-				const total = (
-					Number.parseFloat(trade.price) * Number.parseFloat(trade.size)
-				).toFixed(4);
+		const tradeSummaries = trades.list.map((trade) => {
+			const sideEmoji = trade.side.toUpperCase() === "BUY" ? "📈" : "📉";
 
-				return dedent`
-          ${sideEmoji} ${trade.side}
-          ${trade.trade_id ? `Trade ID: ${trade.trade_id}` : ""}
-          Market ID: ${trade.market_id}
-          ${trade.market_question ? `Question: ${trade.market_question}` : ""}
-          Token: ${trade.token_id}
+			return dedent`
+          ${sideEmoji} ${trade.side.toUpperCase()}
+          TX: ${trade.txHash}
+          Market ID: ${trade.marketId}
+          ${trade.marketTitle ? `Title: ${trade.marketTitle}` : ""}
+          ${trade.rootMarketTitle ? `Root Market: ${trade.rootMarketTitle}` : ""}
           ${trade.outcome ? `Outcome: ${trade.outcome}` : ""}
           Price: ${trade.price}
-          Size: ${trade.size}
-          Total: ${total}
-          Time: ${trade.timestamp}
+          Shares: ${trade.shares}
+          Amount: ${trade.amount}
+          ${trade.fee ? `Fee: ${trade.fee}` : ""}
+          ${trade.statusEnum ? `Status: ${trade.statusEnum}` : ""}
+          Time: ${new Date(trade.createdAt * 1000).toISOString()}
         `;
-			});
+		});
 
-			// Calculate summary statistics
-			const buyTrades = trades.list.filter((t) => t.side === "BUY");
-			const sellTrades = trades.list.filter((t) => t.side === "SELL");
+		// Calculate summary statistics
+		const buyTrades = trades.list.filter(
+			(t) => t.side.toUpperCase() === "BUY",
+		);
+		const sellTrades = trades.list.filter(
+			(t) => t.side.toUpperCase() === "SELL",
+		);
 
-			const totalBuyVolume = buyTrades.reduce(
-				(sum, t) =>
-					sum + Number.parseFloat(t.price) * Number.parseFloat(t.size),
-				0,
-			);
-			const totalSellVolume = sellTrades.reduce(
-				(sum, t) =>
-					sum + Number.parseFloat(t.price) * Number.parseFloat(t.size),
-				0,
-			);
+		const totalBuyVolume = buyTrades.reduce(
+			(sum, t) => sum + Number.parseFloat(t.amount),
+			0,
+		);
+		const totalSellVolume = sellTrades.reduce(
+			(sum, t) => sum + Number.parseFloat(t.amount),
+			0,
+		);
 
 			return dedent`
         Trade History for Wallet: ${params.walletAddress}
