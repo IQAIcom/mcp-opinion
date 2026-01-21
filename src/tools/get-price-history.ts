@@ -16,8 +16,7 @@ type GetPriceHistoryParams = z.infer<typeof getPriceHistoryParams>;
 
 export const getPriceHistoryTool = {
 	name: "GET_PRICE_HISTORY",
-	description:
-		"Get historical price data (OHLCV) for a prediction market token",
+	description: "Get historical price data for a prediction market token",
 	parameters: getPriceHistoryParams,
 	execute: async (params: GetPriceHistoryParams) => {
 		const apiService = new OpinionAPIService();
@@ -28,47 +27,47 @@ export const getPriceHistoryTool = {
 				params.interval,
 			);
 
-			if (!priceHistory.history || priceHistory.history.length === 0) {
+			if (
+				!priceHistory ||
+				!priceHistory.history ||
+				priceHistory.history.length === 0
+			) {
 				return `No price history available for token ${params.tokenId} at ${params.interval} interval.`;
 			}
 
+			const historyData = priceHistory.history;
+
 			// Show the most recent entries (up to 10)
-			const recentHistory = priceHistory.history.slice(-10);
+			const recentHistory = historyData.slice(0, 10);
 
 			const historyLines = recentHistory.map((entry) => {
-				return dedent`
-          Time: ${entry.timestamp}
-          Open: ${entry.open} | High: ${entry.high} | Low: ${entry.low} | Close: ${entry.close}
-          ${entry.volume ? `Volume: ${entry.volume}` : ""}
-        `;
+				const timestamp = new Date(entry.t * 1000).toISOString();
+				return `${timestamp}: ${entry.p}`;
 			});
 
 			// Calculate summary statistics
-			const closes = priceHistory.history.map((e) =>
-				Number.parseFloat(e.close),
-			);
-			const latestPrice = closes[closes.length - 1];
-			const earliestPrice = closes[0];
+			const prices = historyData.map((e) => Number.parseFloat(e.p));
+			const latestPrice = prices[0]; // Most recent first
+			const earliestPrice = prices[prices.length - 1];
 			const priceChange = latestPrice - earliestPrice;
-			const priceChangePercent = ((priceChange / earliestPrice) * 100).toFixed(
-				2,
-			);
+			const priceChangePercent = earliestPrice !== 0
+				? ((priceChange / earliestPrice) * 100).toFixed(2)
+				: "0.00";
 
 			return dedent`
         Price History for Token: ${params.tokenId}
         Interval: ${params.interval}
-        Total Data Points: ${priceHistory.history.length}
+        Total Data Points: ${historyData.length}
 
         Summary:
         - Current Price: ${latestPrice.toFixed(4)}
-        - Period Start Price: ${earliestPrice.toFixed(4)}
+        - Earliest Price: ${earliestPrice.toFixed(4)}
         - Change: ${priceChange >= 0 ? "+" : ""}${priceChange.toFixed(4)} (${priceChange >= 0 ? "+" : ""}${priceChangePercent}%)
-        - High: ${Math.max(...priceHistory.history.map((e) => Number.parseFloat(e.high))).toFixed(4)}
-        - Low: ${Math.min(...priceHistory.history.map((e) => Number.parseFloat(e.low))).toFixed(4)}
+        - High: ${Math.max(...prices).toFixed(4)}
+        - Low: ${Math.min(...prices).toFixed(4)}
 
-        Recent Price Data (last ${recentHistory.length} entries):
-
-        ${historyLines.join("\n\n---\n\n")}
+        Recent Prices (most recent first):
+        ${historyLines.join("\n        ")}
       `;
 		} catch (error) {
 			if (error instanceof Error) {

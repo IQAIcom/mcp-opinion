@@ -115,26 +115,20 @@ export const LatestPriceSchema = z.object({
 
 export type LatestPrice = z.infer<typeof LatestPriceSchema>;
 
-// Price history entry (OHLCV)
+// Price history entry - API returns simple time/price points (t, p)
 export const PriceHistoryEntrySchema = z.object({
-	timestamp: z.number(),
-	open: z.string(),
-	high: z.string(),
-	low: z.string(),
-	close: z.string(),
-	volume: z.string().optional(),
+	t: z.number(), // timestamp
+	p: z.string(), // price
 });
 
 export type PriceHistoryEntry = z.infer<typeof PriceHistoryEntrySchema>;
 
-// Price history response
-export const PriceHistorySchema = z.object({
-	tokenId: z.string().optional(),
-	interval: z.string().optional(),
+// Price history response - API returns {history: [{t, p}, ...]}
+export const PriceHistoryRawSchema = z.object({
 	history: z.array(PriceHistoryEntrySchema),
 });
 
-export type PriceHistory = z.infer<typeof PriceHistorySchema>;
+export type PriceHistory = z.infer<typeof PriceHistoryRawSchema>;
 
 // User position schema
 export const PositionSchema = z.object({

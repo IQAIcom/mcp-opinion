@@ -18,7 +18,7 @@ import {
 	type PositionsList,
 	PositionsListSchema,
 	type PriceHistory,
-	PriceHistorySchema,
+	PriceHistoryRawSchema,
 	type QuoteTokensList,
 	QuoteTokensListSchema,
 	type TradesList,
@@ -198,7 +198,7 @@ export class OpinionAPIService {
 		url.searchParams.append("token_id", tokenId);
 		url.searchParams.append("interval", interval);
 
-		const responseSchema = NullableApiResponseSchema(PriceHistorySchema);
+		const responseSchema = NullableApiResponseSchema(PriceHistoryRawSchema);
 
 		const data = await fetchJson(
 			url.toString(),
