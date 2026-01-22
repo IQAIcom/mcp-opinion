@@ -17,6 +17,8 @@ try:
     from opinion_clob_sdk.chain.safe.utils import fast_to_checksum_address as original_fast_to_checksum_address
     from typing import Union
     from eth_typing.evm import ChecksumAddress, AnyAddress
+    from eth_account import Account
+    from eth_utils import to_checksum_address
     
     def patched_fast_to_checksum_address(value: Union[AnyAddress, str, bytes, None]) -> Union[ChecksumAddress, None]:
         """Patched version that handles None and empty strings"""
@@ -73,11 +75,19 @@ def create_client(config: Dict[str, Any]) -> Client:
     if not private_key.startswith("0x"):
         private_key = f"0x{private_key}"
     
-    # Get multi_sig_addr - SDK has a bug where it tries to normalize empty strings
-    # We need to either pass None (if SDK accepts it) or a valid address
-    # Since SDK defaults to '', we'll pass None explicitly to see if it handles it
+    # Get multi_sig_addr - if not provided, derive wallet address from private key
+    # The SDK uses multi_sig_addr for allowance checks, so we need a valid address
     multi_sig_addr_raw = config.get("multiSigAddr", "")
     multi_sig_addr = multi_sig_addr_raw.strip() if multi_sig_addr_raw else None
+    
+    # If no multi_sig_addr provided, derive wallet address from private key
+    # This allows regular wallets (non-multi-sig) to work
+    if not multi_sig_addr:
+        try:
+            account = Account.from_key(private_key)
+            multi_sig_addr = to_checksum_address(account.address)
+        except Exception as e:
+            raise ValueError(f"Failed to derive wallet address from private key: {e}")
     
     # Get API key - don't pass empty string
     apikey = config.get("apikey", "").strip() if config.get("apikey") else None
@@ -87,24 +97,12 @@ def create_client(config: Dict[str, Any]) -> Client:
         "chain_id": config.get("chainId", 56),
         "rpc_url": config.get("rpcUrl", "https://bsc-dataseed.binance.org"),
         "private_key": private_key,
+        "multi_sig_addr": multi_sig_addr,  # Always provide a valid address
     }
     
     # Only add apikey if it's provided and non-empty
     if apikey:
         client_params["apikey"] = apikey
-    
-    # SDK bug: it normalizes multi_sig_addr even if empty, causing errors
-    # We've monkey-patched fast_to_checksum_address to handle empty strings
-    # So we can safely pass empty string and it will return None
-    # But we still need to handle the ContractCaller - let's pass empty string
-    # and let our patch handle it, OR pass a dummy address
-    # Actually, let's check if ContractCaller handles None
-    # For now, pass empty string and let the patch convert it to None
-    # But wait - the patch returns None, but ContractCaller might not accept None
-    # Let's just pass the empty string and let the patch handle the normalization
-    if multi_sig_addr:
-        client_params["multi_sig_addr"] = multi_sig_addr
-    # If empty, don't pass it - let SDK use default and our patch will handle it
     
     # Debug: print what we're passing (redact private key)
     import os
@@ -270,20 +268,70 @@ def enable_trading(config: Dict[str, Any]) -> Dict[str, Any]:
     """Approve quote tokens for trading"""
     try:
         client = create_client(config)
-        result = client.enable_trading()
+        
+        # Ensure addresses are checksummed before calling enable_trading
+        # Get quote tokens and checksum addresses using Web3
+        from web3 import Web3
+        quote_token_list_response = client.get_quote_tokens()
+        quote_token_list = client._parse_list_response(quote_token_list_response, "get quote tokens")
+        
+        supported_quote_tokens: dict = {}
+        for quote_token in quote_token_list:
+            # Use Web3's to_checksum_address to ensure proper checksumming
+            quote_token_address = Web3.to_checksum_address(quote_token.quote_token_address)
+            ctf_exchange_address = Web3.to_checksum_address(quote_token.ctf_exchange_address)
+            supported_quote_tokens[quote_token_address] = ctf_exchange_address
+        
+        if len(supported_quote_tokens) == 0:
+            from opinion_clob_sdk.sdk import OpenApiError
+            raise OpenApiError('No supported quote tokens found')
+        
+        # Call enable_trading directly on contract_caller with checksummed addresses
+        tx_hash, safe_tx_hash, return_value = client.contract_caller.enable_trading(supported_quote_tokens)
+        result = client._format_transaction_result(tx_hash, safe_tx_hash, return_value)
         
         return {
-            "success": result.errno == 0,
-            "errno": result.errno,
-            "errmsg": result.errmsg,
-            "data": serialize_result_data(result.result) if hasattr(result, "result") else None,
+            "success": True,
+            "errno": 0,
+            "errmsg": "",
+            "data": serialize_result_data(result) if result else None,
         }
     except Exception as e:
+        # Provide more detailed error information
+        error_msg = str(e)
+        error_details = error_msg
+        
+        # Check for common issues
+        if "Could not transact" in error_msg or "contract function" in error_msg:
+            # This could be due to:
+            # 1. RPC endpoint issues
+            # 2. Insufficient BNB for gas
+            # 3. Network connectivity
+            # 4. Contract deployment issues
+            error_details = (
+                f"{error_msg}\n\n"
+                "Possible causes:\n"
+                "1. RPC endpoint may be unavailable or slow\n"
+                "2. Wallet may not have sufficient BNB for gas fees\n"
+                "3. Network connectivity issues\n"
+                "4. Contract may not be deployed on this chain\n\n"
+                f"RPC URL: {config.get('rpcUrl', 'Not set')}\n"
+                f"Chain ID: {config.get('chainId', 'Not set')}\n"
+                f"Wallet: {client.contract_caller.multi_sig_addr if 'client' in locals() else 'Unknown'}"
+            )
+        elif "InvalidAddress" in error_msg or "checksum" in error_msg.lower():
+            error_details = (
+                f"{error_msg}\n\n"
+                "This error indicates an address checksumming issue. "
+                "The addresses should be automatically checksummed, but if this error persists, "
+                "it may be a compatibility issue with the Web3.py version."
+            )
+        
         return {
             "success": False,
-            "error": str(e),
+            "error": error_details,
             "errno": -1,
-            "errmsg": str(e),
+            "errmsg": error_msg,
         }
 
 
