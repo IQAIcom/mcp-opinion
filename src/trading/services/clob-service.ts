@@ -88,14 +88,20 @@ export class ClobService {
 			? privateKey
 			: `0x${privateKey}`;
 
+		// Support custom RPC URL via environment variable, with fallback to defaults
+		const defaultRpcUrls: Record<number, string> = {
+			56: "https://bsc-dataseed.binance.org", // BNB Chain mainnet
+			97: "https://data-seed-prebsc-1-s1.binance.org:8545", // BNB Chain testnet
+		};
+		
 		this.config = {
 			host: "https://proxy.opinion.trade:8443",
 			apikey: config.opinion.apiKey,
 			chainId: config.opinion.chainId,
 			rpcUrl:
-				config.opinion.chainId === 56
-					? "https://bsc-dataseed.binance.org"
-					: "https://data-seed-prebsc-1-s1.binance.org:8545",
+				process.env.OPINION_RPC_URL ||
+				defaultRpcUrls[config.opinion.chainId] ||
+				"https://bsc-dataseed.binance.org",
 			privateKey: normalizedPrivateKey,
 		};
 	}
