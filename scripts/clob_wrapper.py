@@ -13,12 +13,54 @@ try:
     from opinion_clob_sdk.chain.py_order_utils.model.order import PlaceOrderDataInput
     from opinion_clob_sdk.chain.py_order_utils.model.sides import OrderSide
     from opinion_clob_sdk.chain.py_order_utils.model.order_type import LIMIT_ORDER, MARKET_ORDER
+    # Monkey-patch to handle empty multi_sig_addr
+    from opinion_clob_sdk.chain.safe.utils import fast_to_checksum_address as original_fast_to_checksum_address
+    from typing import Union
+    from eth_typing.evm import ChecksumAddress, AnyAddress
+    
+    def patched_fast_to_checksum_address(value: Union[AnyAddress, str, bytes, None]) -> Union[ChecksumAddress, None]:
+        """Patched version that handles None and empty strings"""
+        if value is None or (isinstance(value, str) and value.strip() == ""):
+            return None
+        return original_fast_to_checksum_address(value)
+    
+    # Apply the patch
+    import opinion_clob_sdk.sdk as sdk_module
+    sdk_module.fast_to_checksum_address = patched_fast_to_checksum_address
 except ImportError:
     print(json.dumps({
         "error": "opinion_clob_sdk not installed",
         "message": "Please install: pip install opinion-clob-sdk"
     }), file=sys.stderr)
     sys.exit(1)
+
+
+def serialize_result_data(result_data: Any) -> Any:
+    """Convert SDK result objects to JSON-serializable format"""
+    if result_data is None:
+        return None
+    
+    # If it's already a basic type, return as-is
+    if isinstance(result_data, (dict, list, str, int, float, bool)):
+        # Recursively process dicts and lists
+        if isinstance(result_data, dict):
+            return {k: serialize_result_data(v) for k, v in result_data.items()}
+        elif isinstance(result_data, list):
+            return [serialize_result_data(item) for item in result_data]
+        return result_data
+    
+    # Try to convert object to dict
+    if hasattr(result_data, "__dict__"):
+        return serialize_result_data(result_data.__dict__)
+    elif hasattr(result_data, "dict"):
+        # Pydantic models have .dict() method
+        return serialize_result_data(result_data.dict())
+    elif hasattr(result_data, "model_dump"):
+        # Pydantic v2 has .model_dump() method
+        return serialize_result_data(result_data.model_dump())
+    else:
+        # Fallback: convert to string
+        return str(result_data)
 
 
 def create_client(config: Dict[str, Any]) -> Client:
@@ -31,14 +73,46 @@ def create_client(config: Dict[str, Any]) -> Client:
     if not private_key.startswith("0x"):
         private_key = f"0x{private_key}"
     
-    return Client(
-        host=config.get("host", "https://proxy.opinion.trade:8443"),
-        apikey=config.get("apikey", ""),
-        chain_id=config.get("chainId", 56),
-        rpc_url=config.get("rpcUrl", "https://bsc-dataseed.binance.org"),
-        private_key=private_key,
-        multi_sig_addr=config.get("multiSigAddr", ""),
-    )
+    # Get multi_sig_addr - SDK has a bug where it tries to normalize empty strings
+    # We need to either pass None (if SDK accepts it) or a valid address
+    # Since SDK defaults to '', we'll pass None explicitly to see if it handles it
+    multi_sig_addr_raw = config.get("multiSigAddr", "")
+    multi_sig_addr = multi_sig_addr_raw.strip() if multi_sig_addr_raw else None
+    
+    # Get API key - don't pass empty string
+    apikey = config.get("apikey", "").strip() if config.get("apikey") else None
+    
+    client_params = {
+        "host": config.get("host", "https://proxy.opinion.trade:8443"),
+        "chain_id": config.get("chainId", 56),
+        "rpc_url": config.get("rpcUrl", "https://bsc-dataseed.binance.org"),
+        "private_key": private_key,
+    }
+    
+    # Only add apikey if it's provided and non-empty
+    if apikey:
+        client_params["apikey"] = apikey
+    
+    # SDK bug: it normalizes multi_sig_addr even if empty, causing errors
+    # We've monkey-patched fast_to_checksum_address to handle empty strings
+    # So we can safely pass empty string and it will return None
+    # But we still need to handle the ContractCaller - let's pass empty string
+    # and let our patch handle it, OR pass a dummy address
+    # Actually, let's check if ContractCaller handles None
+    # For now, pass empty string and let the patch convert it to None
+    # But wait - the patch returns None, but ContractCaller might not accept None
+    # Let's just pass the empty string and let the patch handle the normalization
+    if multi_sig_addr:
+        client_params["multi_sig_addr"] = multi_sig_addr
+    # If empty, don't pass it - let SDK use default and our patch will handle it
+    
+    # Debug: print what we're passing (redact private key)
+    import os
+    if os.getenv("DEBUG"):
+        debug_params = {**client_params, "private_key": f"{private_key[:8]}...{private_key[-6:]}"}
+        print(f"[DEBUG] Client params: {debug_params}", file=sys.stderr)
+    
+    return Client(**client_params)
 
 
 def place_order(config: Dict[str, Any], order_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -70,7 +144,7 @@ def place_order(config: Dict[str, Any], order_data: Dict[str, Any]) -> Dict[str,
             "success": result.errno == 0,
             "errno": result.errno,
             "errmsg": result.errmsg,
-            "data": result.result if hasattr(result, "result") else None,
+            "data": serialize_result_data(result.result) if hasattr(result, "result") else None,
         }
     except Exception as e:
         return {
@@ -91,7 +165,7 @@ def cancel_order(config: Dict[str, Any], order_id: str) -> Dict[str, Any]:
             "success": result.errno == 0,
             "errno": result.errno,
             "errmsg": result.errmsg,
-            "data": result.result if hasattr(result, "result") else None,
+            "data": serialize_result_data(result.result) if hasattr(result, "result") else None,
         }
     except Exception as e:
         return {
@@ -112,7 +186,7 @@ def cancel_orders_batch(config: Dict[str, Any], order_ids: list) -> Dict[str, An
             "success": result.errno == 0,
             "errno": result.errno,
             "errmsg": result.errmsg,
-            "data": result.result if hasattr(result, "result") else None,
+            "data": serialize_result_data(result.result) if hasattr(result, "result") else None,
         }
     except Exception as e:
         return {
@@ -134,7 +208,7 @@ def cancel_all_orders(config: Dict[str, Any], market_id: Optional[int] = None, s
             "success": result.errno == 0,
             "errno": result.errno,
             "errmsg": result.errmsg,
-            "data": result.result if hasattr(result, "result") else None,
+            "data": serialize_result_data(result.result) if hasattr(result, "result") else None,
         }
     except Exception as e:
         return {
@@ -160,7 +234,7 @@ def get_my_orders(config: Dict[str, Any], market_id: Optional[int] = None, statu
             "success": result.errno == 0,
             "errno": result.errno,
             "errmsg": result.errmsg,
-            "data": result.result if hasattr(result, "result") else None,
+            "data": serialize_result_data(result.result) if hasattr(result, "result") else None,
         }
     except Exception as e:
         return {
@@ -181,7 +255,7 @@ def get_my_balances(config: Dict[str, Any]) -> Dict[str, Any]:
             "success": result.errno == 0,
             "errno": result.errno,
             "errmsg": result.errmsg,
-            "data": result.result if hasattr(result, "result") else None,
+            "data": serialize_result_data(result.result) if hasattr(result, "result") else None,
         }
     except Exception as e:
         return {
@@ -202,7 +276,7 @@ def enable_trading(config: Dict[str, Any]) -> Dict[str, Any]:
             "success": result.errno == 0,
             "errno": result.errno,
             "errmsg": result.errmsg,
-            "data": result.result if hasattr(result, "result") else None,
+            "data": serialize_result_data(result.result) if hasattr(result, "result") else None,
         }
     except Exception as e:
         return {

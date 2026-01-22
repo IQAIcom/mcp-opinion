@@ -17,12 +17,20 @@ MCP server for interacting with [Opinion.trade](https://opinion.trade) predictio
 git clone https://github.com/IQAIcom/mcp-opinion
 cd mcp-opinion
 
-# Install dependencies
+# Install Node.js dependencies
 pnpm install
+
+# Set up Python environment for trading tools (optional, only if using trading features)
+python3 -m venv venv
+source venv/bin/activate  # On macOS/Linux
+# or: venv\Scripts\activate  # On Windows
+pip install -r requirements.txt
 
 # Build
 pnpm run build
 ```
+
+**Note:** The Python virtual environment is only needed for trading tools. Read-only tools work without it.
 
 ## Configuration
 
@@ -198,28 +206,20 @@ Trading tools are available when `OPINION_PRIVATE_KEY` is set. These tools use t
 ### Prerequisites
 
 1. **Python 3** installed on your system
-2. **Opinion CLOB SDK** installed:
+2. **Opinion CLOB SDK** installed (the server will automatically use `venv/bin/python3` if it exists):
    
-   **Option 1: Using project virtual environment (recommended)**
    ```bash
-   # Create virtual environment
+   # If you haven't already, create and activate virtual environment
    python3 -m venv venv
-   
-   # Activate it
    source venv/bin/activate  # On macOS/Linux
-   # or
-   venv\Scripts\activate     # On Windows
+   # or: venv\Scripts\activate  # On Windows
    
    # Install SDK
    pip install -r requirements.txt
    ```
    
-   **Option 2: System-wide installation**
-   ```bash
-   pip install opinion-clob-sdk
-   # or with user flag on macOS
-   pip install --user opinion-clob-sdk
-   ```
+   The server will automatically detect and use the virtual environment's Python. If `venv/` doesn't exist, it falls back to system `python3`.
+   
 3. **OPINION_PRIVATE_KEY** environment variable set (see [Private Key Setup](#private-key-setup) below)
 
 ### Available Trading Tools

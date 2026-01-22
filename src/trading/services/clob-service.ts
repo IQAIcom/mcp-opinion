@@ -108,13 +108,41 @@ export class ClobService {
 		args: Record<string, unknown> | object,
 	): Promise<ClobResponse> {
 		return new Promise((resolve, reject) => {
+			// Prepare config for Python (remove empty optional fields)
+			const pythonConfig: Record<string, unknown> = {
+				host: this.config.host,
+				apikey: this.config.apikey,
+				chainId: this.config.chainId,
+				rpcUrl: this.config.rpcUrl,
+				privateKey: this.config.privateKey,
+			};
+			
+			// Only include multiSigAddr if it's actually set
+			if (this.config.multiSigAddr) {
+				pythonConfig.multiSigAddr = this.config.multiSigAddr;
+			}
+
+			const payload = {
+				config: pythonConfig,
+				...(args as Record<string, unknown>),
+			};
+
+			// Debug logging (remove in production)
+			if (process.env.DEBUG) {
+				const pk = String(pythonConfig.privateKey || "");
+				console.error("[DEBUG] Python command:", command);
+				console.error("[DEBUG] Config (private key redacted):", {
+					...pythonConfig,
+					privateKey: pk
+						? `${pk.slice(0, 6)}...${pk.slice(-4)}`
+						: "MISSING",
+				});
+			}
+
 			const pythonArgs = [
 				PYTHON_SCRIPT,
 				command,
-				JSON.stringify({
-					config: this.config,
-					...(args as Record<string, unknown>),
-				}),
+				JSON.stringify(payload),
 			];
 
 			// Try to use venv Python if available, otherwise fall back to system python3
@@ -139,18 +167,24 @@ export class ClobService {
 
 			python.on("close", (code) => {
 				if (code !== 0) {
+					// Enhanced error reporting for debugging
+					let errorMessage = `Python script failed with code ${code}`;
+					
+					if (stderr) {
+						errorMessage += `\nSTDERR: ${stderr}`;
+					}
+					if (stdout) {
+						errorMessage += `\nSTDOUT: ${stdout}`;
+					}
+					
 					try {
 						const error = JSON.parse(stderr || stdout);
-						reject(
-							new Error(error.message || error.error || "Python script failed"),
-						);
+						errorMessage = error.message || error.error || error.errmsg || errorMessage;
 					} catch {
-						reject(
-							new Error(
-								`Python script failed with code ${code}: ${stderr || stdout}`,
-							),
-						);
+						// Not JSON, use raw output
 					}
+					
+					reject(new Error(errorMessage));
 					return;
 				}
 
