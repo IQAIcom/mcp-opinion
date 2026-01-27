@@ -145,3 +145,62 @@ The mcp-opinion reference implementation is complete and up-to-date. All workflo
 
 ### Summary:
 Fixed npm badges in mcp-near and mcp-near-intent-swaps to point to their correct packages. These packages had incorrectly copied content from mcp-near-agent and mcp-near-intents respectively. Added comprehensive test suite to validate npm badges across all 19 MCP directories.
+
+---
+
+## Task: Configuration tables accurately reflect environment variables
+
+### Date: 2026-01-28
+
+### Completed Actions:
+
+1. **Created configuration table validator test**
+   - Created tests/config-tables.test.ts with 115 tests:
+     - Tests for each MCP (19 dirs × 6 tests = 114 tests):
+       - should have README.md
+       - should have Configuration section in README
+       - environment variables in code should be documented in README
+       - documented environment variables should exist in code
+       - required status should match code defaults
+       - configuration table should have proper markdown format
+     - Test for consistent table header format (1 test)
+   - Scanner detects env vars via:
+     - `process.env.VARIABLE_NAME` patterns
+     - Zod schema definitions (`VARIABLE_NAME: z.string()`)
+     - Custom Zod schemas (`VARIABLE_NAME: customSchema`)
+   - README parser extracts env vars from Configuration tables
+   - Handles multiple table formats (4-col, 3-col, multi-table)
+
+2. **Identified discrepancies in MCPs**
+   - mcp-atp: Missing ATP_API_URL, ATP_AGENT_ROUTER_ADDRESS, ATP_BASE_TOKEN_ADDRESS
+   - mcp-discord: Missing SAMPLING_DEFAULT_TIMEOUT, SAMPLING_REACTION_TIMEOUT
+   - mcp-polymarket: Missing CLOB_API_BASE, CHAIN_ID, SIGNATURE_TYPE, POLYMARKET_FUNDER, FUNDER_ADDRESS
+   - mcp-telegram: Missing SAMPLING_ENABLE_NEW_MEMBER
+   - mcp-abi: Uses plugin architecture (env vars passed via MCP client, not process.env)
+
+3. **Fixed README configuration tables**
+   - mcp-atp/README.md: Added 3 missing environment variables with defaults
+   - mcp-discord/README.md: Added 2 missing environment variables
+   - mcp-polymarket/README.md: Added 5 missing environment variables with defaults
+   - mcp-telegram/README.md: Added 1 missing environment variable
+
+4. **Added exception for plugin-architecture MCPs**
+   - mcp-abi uses a plugin options pattern where env vars are documented for
+     MCP client configuration but aren't read via process.env in the code
+   - Added PLUGIN_ARCHITECTURE_MCPS set to exclude from "documented vars should exist" check
+
+5. **Verified all tests pass**
+   - All 248 tests pass (114 npm-badges + 115 config-tables + 19 generate-tools)
+   - Linting passes
+
+### Files Modified:
+- mcp-atp/README.md (added ATP_API_URL, ATP_AGENT_ROUTER_ADDRESS, ATP_BASE_TOKEN_ADDRESS)
+- mcp-discord/README.md (added SAMPLING_DEFAULT_TIMEOUT, SAMPLING_REACTION_TIMEOUT)
+- mcp-polymarket/README.md (added CLOB_API_BASE, CHAIN_ID, SIGNATURE_TYPE, POLYMARKET_FUNDER, FUNDER_ADDRESS)
+- mcp-telegram/README.md (added SAMPLING_ENABLE_NEW_MEMBER)
+
+### Files Created:
+- mcp-opinion/tests/config-tables.test.ts (configuration table validation test suite)
+
+### Summary:
+Created a comprehensive test suite that validates configuration tables in README files against actual environment variable usage in code. Fixed 4 MCPs with missing environment variable documentation. The test scans source code for process.env usage and Zod schema definitions, then compares against documented variables in README Configuration sections.
