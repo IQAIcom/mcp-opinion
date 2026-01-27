@@ -101,6 +101,77 @@ Add the following configuration to your MCP client settings (e.g., `claude_deskt
 
 <!-- AUTO-GENERATED TOOLS START -->
 
+### `GET_LATEST_PRICE`
+Get the current/latest trade price for a prediction market token
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `tokenId` | string | ✅ | The token ID to get the latest price for |
+
+### `GET_MARKET_DETAILS`
+Get detailed information about a specific prediction market by its ID
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `marketId` | number | ✅ | The unique identifier of the market |
+
+### `GET_MARKETS`
+Get a list of prediction markets from Opinion.trade with optional filters for status and market type
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `limit` | number |  | 10 | Number of markets to return (max 20) |
+| `status` | number |  |  | Filter by status: 1=Created, 2=Active, 3=Resolving, 4=Resolved |
+| `marketType` | number |  |  | Market type: 0=Binary, 1=Categorical, 2=All |
+| `page` | number |  |  | Page number for pagination |
+
+### `GET_ORDERBOOK`
+Get the order book (bids and asks) for a specific prediction market token
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `tokenId` | string | ✅ | The token ID to get the order book for |
+
+### `GET_POSITIONS`
+Get the current prediction market positions held by a wallet address
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `walletAddress` | string | ✅ |  | The wallet address to get positions for |
+| `limit` | number |  | 20 | Maximum number of positions to return |
+| `page` | number |  |  | Page number for pagination |
+
+### `GET_PRICE_HISTORY`
+Get historical price data for a prediction market token
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `tokenId` | string | ✅ |  | The token ID to get price history for |
+| `interval` | string |  | "1h" | Time interval: 1m (1 minute), 5m (5 minutes), 1h (1 hour), 1d (1 day) |
+
+### `GET_QUOTE_TOKENS`
+Get the list of available quote tokens (currencies) that can be used for trading on Opinion.trade
+
+_No parameters_
+
+### `GET_TRADE_HISTORY`
+Get the trade history for a wallet address on Opinion.trade
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `walletAddress` | string | ✅ |  | The wallet address to get trade history for |
+| `limit` | number |  | 20 | Maximum number of trades to return |
+| `page` | number |  |  | Page number for pagination |
+
+### `SEARCH_MARKETS`
+Search for prediction markets by keyword in the market title
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `query` | string | ✅ |  | Search keyword to find in market titles |
+| `limit` | number |  | 10 | Maximum number of results to return |
+| `status` | number |  |  | Filter by status: 1=Created, 2=Active, 3=Resolving, 4=Resolved |
+
 <!-- AUTO-GENERATED TOOLS END -->
 
 ## 👨‍💻 Development
