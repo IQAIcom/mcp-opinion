@@ -16,58 +16,6 @@ By implementing the Model Context Protocol (MCP), this server allows Large Langu
 *   **Portfolio Tracking**: Monitor user positions, trade history, and unrealized PnL for specific wallet addresses.
 *   **Metadata Access**: Retrieve detailed market rules, resolution criteria, and available quote tokens.
 
-## MCP Tools
-
-<!-- AUTO-GENERATED TOOLS START -->
-
-**`GET_LATEST_PRICE`**: Get the current/latest trade price for a prediction market token
-- Parameters:
-  - `tokenId` (string, required): The token ID to get the latest price for
-
-**`GET_MARKET_DETAILS`**: Get detailed information about a specific prediction market by its ID
-- Parameters:
-  - `marketId` (number, required): The unique identifier of the market
-
-**`GET_MARKETS`**: Get a list of prediction markets from Opinion.trade with optional filters for status and market type
-- Parameters:
-  - `limit` (number, optional): Number of markets to return (max 20) (default: 10)
-  - `status` (number, optional): Filter by status: 1=Created, 2=Active, 3=Resolving, 4=Resolved
-  - `marketType` (number, optional): Market type: 0=Binary, 1=Categorical, 2=All
-  - `page` (number, optional): Page number for pagination
-
-**`GET_ORDERBOOK`**: Get the order book (bids and asks) for a specific prediction market token
-- Parameters:
-  - `tokenId` (string, required): The token ID to get the order book for
-
-**`GET_POSITIONS`**: Get the current prediction market positions held by a wallet address
-- Parameters:
-  - `walletAddress` (string, required): The wallet address to get positions for
-  - `limit` (number, optional): Maximum number of positions to return (default: 20)
-  - `page` (number, optional): Page number for pagination
-
-**`GET_PRICE_HISTORY`**: Get historical price data for a prediction market token
-- Parameters:
-  - `tokenId` (string, required): The token ID to get price history for
-  - `interval` (enum, optional): Time interval: 1m (1 minute), 5m (5 minutes), 1h (1 hour), 1d (1 day) (default: "1h")
-
-**`GET_QUOTE_TOKENS`**: Get the list of available quote tokens (currencies) that can be used for trading on Opinion.trade
-- Parameters:
-_No parameters_
-
-**`GET_TRADE_HISTORY`**: Get the trade history for a wallet address on Opinion.trade
-- Parameters:
-  - `walletAddress` (string, required): The wallet address to get trade history for
-  - `limit` (number, optional): Maximum number of trades to return (default: 20)
-  - `page` (number, optional): Page number for pagination
-
-**`SEARCH_MARKETS`**: Search for prediction markets by keyword in the market title
-- Parameters:
-  - `query` (string, required): Search keyword to find in market titles
-  - `limit` (number, optional): Maximum number of results to return (default: 10)
-  - `status` (number, optional): Filter by status: 1=Created, 2=Active, 3=Resolving, 4=Resolved
-
-<!-- AUTO-GENERATED TOOLS END -->
-
 ## Installation
 
 ### Using npx (Recommended)
@@ -148,6 +96,58 @@ Add the following configuration to your MCP client settings (e.g., `claude_deskt
 *   "What positions am I currently holding in wallet 0xabc...?"
 *   "Summarize my trade history for the last month."
 *   "Check if I have any winning positions that need to be redeemed."
+
+## MCP Tools
+
+<!-- AUTO-GENERATED TOOLS START -->
+
+**`GET_LATEST_PRICE`**: Get the current/latest trade price for a prediction market token
+- Parameters:
+  - `tokenId` (string, required): The token ID to get the latest price for
+
+**`GET_MARKET_DETAILS`**: Get detailed information about a specific prediction market by its ID
+- Parameters:
+  - `marketId` (number, required): The unique identifier of the market
+
+**`GET_MARKETS`**: Get a list of prediction markets from Opinion.trade with optional filters for status and market type
+- Parameters:
+  - `limit` (number, optional): Number of markets to return (max 20) (default: 10)
+  - `status` (number, optional): Filter by status: 1=Created, 2=Active, 3=Resolving, 4=Resolved
+  - `marketType` (number, optional): Market type: 0=Binary, 1=Categorical, 2=All
+  - `page` (number, optional): Page number for pagination
+
+**`GET_ORDERBOOK`**: Get the order book (bids and asks) for a specific prediction market token
+- Parameters:
+  - `tokenId` (string, required): The token ID to get the order book for
+
+**`GET_POSITIONS`**: Get the current prediction market positions held by a wallet address
+- Parameters:
+  - `walletAddress` (string, required): The wallet address to get positions for
+  - `limit` (number, optional): Maximum number of positions to return (default: 20)
+  - `page` (number, optional): Page number for pagination
+
+**`GET_PRICE_HISTORY`**: Get historical price data for a prediction market token
+- Parameters:
+  - `tokenId` (string, required): The token ID to get price history for
+  - `interval` (enum, optional): Time interval: 1m (1 minute), 5m (5 minutes), 1h (1 hour), 1d (1 day) (default: "1h")
+
+**`GET_QUOTE_TOKENS`**: Get the list of available quote tokens (currencies) that can be used for trading on Opinion.trade
+- Parameters:
+_No parameters_
+
+**`GET_TRADE_HISTORY`**: Get the trade history for a wallet address on Opinion.trade
+- Parameters:
+  - `walletAddress` (string, required): The wallet address to get trade history for
+  - `limit` (number, optional): Maximum number of trades to return (default: 20)
+  - `page` (number, optional): Page number for pagination
+
+**`SEARCH_MARKETS`**: Search for prediction markets by keyword in the market title
+- Parameters:
+  - `query` (string, required): Search keyword to find in market titles
+  - `limit` (number, optional): Maximum number of results to return (default: 10)
+  - `status` (number, optional): Filter by status: 1=Created, 2=Active, 3=Resolving, 4=Resolved
+
+<!-- AUTO-GENERATED TOOLS END -->
 
 ## Development
 
