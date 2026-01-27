@@ -21,47 +21,62 @@ const END = "<!-- AUTO-GENERATED TOOLS END -->";
  */
 async function loadTools() {
   const files = fs.readdirSync(TOOLS_DIR).filter(f => f.endsWith(".ts") && f !== "index.ts");
-  const tools = [];
 
-  for (const file of files) {
+  const toolPromises = files.map(async (file) => {
     const mod = await import(path.join(TOOLS_DIR, file));
-    
     // Find any export that looks like a tool
-    const tool = Object.values(mod).find(exp => 
-      exp && 
+    const tool = Object.values(mod).find(exp =>
+      exp &&
       typeof exp === 'object' &&
       typeof exp.name === 'string' &&
       typeof exp.description === 'string' &&
       (exp.parameters || exp.schema) // Handle both naming conventions if they exist
     );
+    return tool;
+  });
 
-    if (tool) {
-      tools.push(tool);
-    }
-  }
+  const loadedTools = await Promise.all(toolPromises);
+  const tools = loadedTools.filter(Boolean);
 
   return tools.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 function renderSchema(schema) {
-  if (!schema?.shape) return "_No parameters_";
+  if (!schema?.shape || Object.keys(schema.shape).length === 0) return "_No parameters_";
 
   return Object.entries(schema.shape)
     .map(([key, val]) => {
-      // Handle Zod optional/required detection
-      const isOptional = val.isOptional?.() || val._def?.typeName === "ZodOptional";
-      const optionalStr = isOptional ? "optional" : "required";
-      
-      // Try to get type name
-      let type = "unknown";
-      if (val._def?.typeName) {
-        type = val._def.typeName.replace("Zod", "").toLowerCase();
+      let current = val;
+      let isOptional = false;
+      let hasDefault = false;
+      let defaultValue;
+
+      // Unwrap optional and default wrappers to get the base type
+      while (current._def.innerType) {
+        if (current._def.typeName === "ZodOptional") {
+          isOptional = true;
+        }
+        if (current._def.typeName === "ZodDefault") {
+          hasDefault = true;
+          defaultValue = current._def.defaultValue;
+        }
+        current = current._def.innerType;
       }
-      
-      // Extract description if available
+
+      const finalOptional = isOptional || hasDefault;
+      const optionalStr = finalOptional ? "optional" : "required";
+
+      const type = current._def.typeName?.replace("Zod", "").toLowerCase() || "unknown";
+
       const description = val.description ? `: ${val.description}` : "";
-      
-      return `  - \`${key}\` (${type}, ${optionalStr})${description}`;
+
+      let defaultInfo = '';
+      if (hasDefault) {
+        const value = typeof defaultValue === 'function' ? defaultValue() : defaultValue;
+        defaultInfo = ` (default: ${JSON.stringify(value)})`;
+      }
+
+      return `  - \`${key}\` (${type}, ${optionalStr})${description}${defaultInfo}`;
     })
     .join("\n");
 }
@@ -72,7 +87,7 @@ function renderMarkdown(tools) {
   for (const tool of tools) {
     // Support both 'parameters' (Zod) and 'schema' (JSON Schema) fields
     const schema = tool.parameters || tool.schema;
-    
+
     md += `**\`${tool.name}\`**: ${tool.description}\n`;
     md += `- Parameters:\n`;
     md += `${renderSchema(schema)}\n\n`;
@@ -98,7 +113,7 @@ async function main() {
   try {
     const readme = fs.readFileSync(README_PATH, "utf8");
     const tools = await loadTools();
-    
+
     if (tools.length === 0) {
       console.warn("Warning: No tools found!");
     }
