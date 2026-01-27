@@ -35,10 +35,10 @@ export const getTradeHistoryTool = {
 				return `No trade history found for wallet ${params.walletAddress}.`;
 			}
 
-		const tradeSummaries = trades.list.map((trade) => {
-			const sideEmoji = trade.side.toUpperCase() === "BUY" ? "📈" : "📉";
+			const tradeSummaries = trades.list.map((trade) => {
+				const sideEmoji = trade.side.toUpperCase() === "BUY" ? "📈" : "📉";
 
-			return dedent`
+				return dedent`
           ${sideEmoji} ${trade.side.toUpperCase()}
           TX: ${trade.txHash}
           Market ID: ${trade.marketId}
@@ -52,24 +52,24 @@ export const getTradeHistoryTool = {
           ${trade.statusEnum ? `Status: ${trade.statusEnum}` : ""}
           Time: ${new Date(trade.createdAt * 1000).toISOString()}
         `;
-		});
+			});
 
-		// Calculate summary statistics
-		const buyTrades = trades.list.filter(
-			(t) => t.side.toUpperCase() === "BUY",
-		);
-		const sellTrades = trades.list.filter(
-			(t) => t.side.toUpperCase() === "SELL",
-		);
+			// Calculate summary statistics
+			const buyTrades = trades.list.filter(
+				(t) => t.side.toUpperCase() === "BUY",
+			);
+			const sellTrades = trades.list.filter(
+				(t) => t.side.toUpperCase() === "SELL",
+			);
 
-		const totalBuyVolume = buyTrades.reduce(
-			(sum, t) => sum + Number.parseFloat(t.amount),
-			0,
-		);
-		const totalSellVolume = sellTrades.reduce(
-			(sum, t) => sum + Number.parseFloat(t.amount),
-			0,
-		);
+			const totalBuyVolume = buyTrades.reduce(
+				(sum, t) => sum + Number.parseFloat(t.amount),
+				0,
+			);
+			const totalSellVolume = sellTrades.reduce(
+				(sum, t) => sum + Number.parseFloat(t.amount),
+				0,
+			);
 
 			return dedent`
         Trade History for Wallet: ${params.walletAddress}
