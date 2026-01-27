@@ -31,7 +31,7 @@ jobs:
           fi
 
       - name: Generate MCP tool documentation
-        run: node .github/actions/generate-mcp-tools/generate-tools.mjs
+        run: npx tsx .github/actions/generate-mcp-tools/generate-tools.mjs
 
       - name: Commit README changes
         run: |
