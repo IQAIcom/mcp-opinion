@@ -73,22 +73,35 @@ function renderSchema(schema) {
 		return "_No parameters_";
 	}
 
-	return Object.entries(properties)
-		.map(([key, prop]) => {
-			const type = Array.isArray(prop.type)
-				? prop.type.join(" | ")
-				: (prop.type ?? "unknown");
+	// Check if any param has a default value to determine table columns
+	const hasDefaults = Object.values(properties).some(
+		(prop) => prop.default !== undefined,
+	);
 
-			const optionalStr = required.has(key) ? "required" : "optional";
-			const description = prop.description ? `: ${prop.description}` : "";
-			const defaultInfo =
-				prop.default !== undefined
-					? ` (default: ${JSON.stringify(prop.default)})`
-					: "";
+	// Build table header
+	let table = hasDefaults
+		? "| Parameter | Type | Required | Default | Description |\n|-----------|------|----------|---------|-------------|\n"
+		: "| Parameter | Type | Required | Description |\n|-----------|------|----------|-------------|\n";
 
-			return `  - \`${key}\` (${type}, ${optionalStr})${description}${defaultInfo}`;
-		})
-		.join("\n");
+	// Build table rows
+	for (const [key, prop] of Object.entries(properties)) {
+		const type = Array.isArray(prop.type)
+			? prop.type.join(" | ")
+			: (prop.type ?? "unknown");
+
+		const requiredStr = required.has(key) ? "✅" : "";
+		const description = prop.description ?? "";
+		const defaultVal =
+			prop.default !== undefined ? JSON.stringify(prop.default) : "";
+
+		if (hasDefaults) {
+			table += `| \`${key}\` | ${type} | ${requiredStr} | ${defaultVal} | ${description} |\n`;
+		} else {
+			table += `| \`${key}\` | ${type} | ${requiredStr} | ${description} |\n`;
+		}
+	}
+
+	return table.trim();
 }
 
 function renderMarkdown(tools) {
@@ -97,8 +110,8 @@ function renderMarkdown(tools) {
 	for (const tool of tools) {
 		const schema = tool.parameters || tool.schema;
 
-		md += `**\`${tool.name}\`**: ${tool.description}\n`;
-		md += "- Parameters:\n";
+		md += `### \`${tool.name}\`\n`;
+		md += `${tool.description}\n\n`;
 		md += `${renderSchema(schema)}\n\n`;
 	}
 

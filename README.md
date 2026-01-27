@@ -1,24 +1,24 @@
-# Opinion MCP Server
+# 🔮 Opinion MCP Server
 
 [![npm version](https://img.shields.io/npm/v/@iqai/mcp-opinion.svg)](https://www.npmjs.com/package/@iqai/mcp-opinion)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-## Overview
+## 📖 Overview
 
 The Opinion MCP Server enables AI agents to interact with [Opinion.trade](https://opinion.trade), a prediction market platform on the BNB Chain. This server provides comprehensive access to market data, real-time pricing, order books, and user portfolio information.
 
 By implementing the Model Context Protocol (MCP), this server allows Large Language Models (LLMs) to discover prediction markets, analyze odds (probabilities), and track trading activity directly through their context window, bridging the gap between AI and decentralized prediction markets.
 
-## Features
+## ✨ Features
 
 *   **Market Discovery**: Search and filter prediction markets by status, type (binary/categorical), and keywords.
 *   **Real-time Pricing**: Access live price data, implied probabilities, and depth-of-market (order books) for any outcome token.
 *   **Portfolio Tracking**: Monitor user positions, trade history, and unrealized PnL for specific wallet addresses.
 *   **Metadata Access**: Retrieve detailed market rules, resolution criteria, and available quote tokens.
 
-## Installation
+## 📦 Installation
 
-### Using npx (Recommended)
+### 🚀 Using npx (Recommended)
 
 To use this server without installing it globally:
 
@@ -26,7 +26,7 @@ To use this server without installing it globally:
 npx @iqai/mcp-opinion
 ```
 
-### Build from Source
+### 🔧 Build from Source
 
 ```bash
 git clone https://github.com/IQAIcom/mcp-opinion.git
@@ -35,11 +35,11 @@ pnpm install
 pnpm run build
 ```
 
-## Running with an MCP Client
+## ⚡ Running with an MCP Client
 
 Add the following configuration to your MCP client settings (e.g., `claude_desktop_config.json`).
 
-### Minimal Configuration
+### 📋 Minimal Configuration
 
 ```json
 {
@@ -55,7 +55,7 @@ Add the following configuration to your MCP client settings (e.g., `claude_deskt
 }
 ```
 
-### Advanced Configuration (Local Build)
+### ⚙️ Advanced Configuration (Local Build)
 
 ```json
 {
@@ -72,7 +72,7 @@ Add the following configuration to your MCP client settings (e.g., `claude_deskt
 }
 ```
 
-## Configuration (Environment Variables)
+## 🔐 Configuration (Environment Variables)
 
 | Variable | Required | Description | Default |
 | :--- | :--- | :--- | :--- |
@@ -80,109 +80,63 @@ Add the following configuration to your MCP client settings (e.g., `claude_deskt
 | `OPINION_CHAIN_ID` | No | BNB Chain ID (56 for Mainnet, 97 for Testnet) | `56` |
 | `OPINION_PRIVATE_KEY` | No | Reserved for future trading capabilities | - |
 
-## Usage Examples
+## 💡 Usage Examples
 
-### Market Discovery
+### 🔍 Market Discovery
 *   "What are the trending prediction markets on Opinion right now?"
 *   "Search for markets related to 'Bitcoin' or 'BTC'."
 *   "Find active markets about the US Election."
 
-### Analytics & Pricing
+### 📊 Analytics & Pricing
 *   "Show me the order book for token 0x123... and check the spread."
 *   "What is the current probability implied by the price of the 'Yes' token?"
 *   "Get the 1-hour price history for this market token over the last 24 hours."
 
-### Portfolio Management
+### 💼 Portfolio Management
 *   "What positions am I currently holding in wallet 0xabc...?"
 *   "Summarize my trade history for the last month."
 *   "Check if I have any winning positions that need to be redeemed."
 
-## MCP Tools
+## 🛠️ MCP Tools
 
 <!-- AUTO-GENERATED TOOLS START -->
 
-**`GET_LATEST_PRICE`**: Get the current/latest trade price for a prediction market token
-- Parameters:
-  - `tokenId` (string, required): The token ID to get the latest price for
-
-**`GET_MARKET_DETAILS`**: Get detailed information about a specific prediction market by its ID
-- Parameters:
-  - `marketId` (number, required): The unique identifier of the market
-
-**`GET_MARKETS`**: Get a list of prediction markets from Opinion.trade with optional filters for status and market type
-- Parameters:
-  - `limit` (number, optional): Number of markets to return (max 20) (default: 10)
-  - `status` (number, optional): Filter by status: 1=Created, 2=Active, 3=Resolving, 4=Resolved
-  - `marketType` (number, optional): Market type: 0=Binary, 1=Categorical, 2=All
-  - `page` (number, optional): Page number for pagination
-
-**`GET_ORDERBOOK`**: Get the order book (bids and asks) for a specific prediction market token
-- Parameters:
-  - `tokenId` (string, required): The token ID to get the order book for
-
-**`GET_POSITIONS`**: Get the current prediction market positions held by a wallet address
-- Parameters:
-  - `walletAddress` (string, required): The wallet address to get positions for
-  - `limit` (number, optional): Maximum number of positions to return (default: 20)
-  - `page` (number, optional): Page number for pagination
-
-**`GET_PRICE_HISTORY`**: Get historical price data for a prediction market token
-- Parameters:
-  - `tokenId` (string, required): The token ID to get price history for
-  - `interval` (string, optional): Time interval: 1m (1 minute), 5m (5 minutes), 1h (1 hour), 1d (1 day) (default: "1h")
-
-**`GET_QUOTE_TOKENS`**: Get the list of available quote tokens (currencies) that can be used for trading on Opinion.trade
-- Parameters:
-_No parameters_
-
-**`GET_TRADE_HISTORY`**: Get the trade history for a wallet address on Opinion.trade
-- Parameters:
-  - `walletAddress` (string, required): The wallet address to get trade history for
-  - `limit` (number, optional): Maximum number of trades to return (default: 20)
-  - `page` (number, optional): Page number for pagination
-
-**`SEARCH_MARKETS`**: Search for prediction markets by keyword in the market title
-- Parameters:
-  - `query` (string, required): Search keyword to find in market titles
-  - `limit` (number, optional): Maximum number of results to return (default: 10)
-  - `status` (number, optional): Filter by status: 1=Created, 2=Active, 3=Resolving, 4=Resolved
-
 <!-- AUTO-GENERATED TOOLS END -->
 
-## Development
+## 👨‍💻 Development
 
-### Build Project
+### 🏗️ Build Project
 ```bash
 pnpm run build
 ```
 
-### Development Mode (Watch)
+### 👁️ Development Mode (Watch)
 ```bash
 pnpm run watch
 ```
 
-### Linting & Formatting
+### ✅ Linting & Formatting
 ```bash
 pnpm run lint
 pnpm run format
 ```
 
-### Project Structure
+### 📁 Project Structure
 *   `src/tools/`: Individual tool definitions
 *   `src/services/`: API client and business logic
 *   `src/lib/`: Shared utilities
 *   `src/index.ts`: Server entry point
 
-## Resources
+## 📚 Resources
 
 *   [Opinion.trade API Documentation](https://docs.opinion.trade/developer-guide/opinion-open-api)
 *   [Model Context Protocol (MCP)](https://modelcontextprotocol.io)
 *   [Opinion.trade Platform](https://opinion.trade)
 
-## Disclaimer
+## ⚠️ Disclaimer
 
 This project is an unofficial tool and is not directly affiliated with Opinion.trade. It interacts with financial and prediction market data. Users should exercise caution and verify all data independently. Trading in prediction markets involves risk.
 
-## License
+## 📄 License
 
 [MIT](LICENSE)
