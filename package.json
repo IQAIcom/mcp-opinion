@@ -1,5 +1,5 @@
 {
-	"name": "mcp-opinion",
+	"name": "@iqai/mcp-opinion",
 	"version": "0.0.1",
 	"description": "MCP server for interacting with Opinion.trade prediction markets on BNB Chain",
 	"main": "dist/index.js",
