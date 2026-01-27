@@ -81,3 +81,67 @@
 
 ### Summary:
 The mcp-opinion reference implementation is complete and up-to-date. All workflows are working correctly. Added comprehensive test suite for the generate-tools script and README structure validation.
+
+---
+
+## Task: npm badges point to correct packages
+
+### Date: 2026-01-28
+
+### Completed Actions:
+
+1. **Analyzed all MCP README and package.json files**
+   - Scanned 19 MCP directories for npm badge discrepancies
+   - Compared package.json name field with npm badge URLs in READMEs
+   - Found 2 MCPs with incorrect npm badge references
+
+2. **Fixed mcp-near package**
+   - Updated package.json:
+     - Changed name from `@iqai/mcp-near-agent` to `@iqai/mcp-near`
+     - Changed bin from `mcp-near-agent` to `mcp-near`
+     - Updated repository, homepage, and bugs URLs to match directory name
+   - Updated README.md:
+     - Changed title from "NEAR Agent MCP Server" to "NEAR MCP Server"
+     - Fixed npm badge URL to point to `@iqai/mcp-near`
+     - Updated all npx commands to use `@iqai/mcp-near`
+     - Updated git clone URLs and paths to `mcp-near`
+     - Updated MCP client configuration examples
+
+3. **Fixed mcp-near-intent-swaps package**
+   - Updated package.json:
+     - Changed name from `@iqai/mcp-near-intents` to `@iqai/mcp-near-intent-swaps`
+     - Changed bin from `mcp-near-intents` to `mcp-near-intent-swaps`
+     - Updated description to match the correct package name
+   - Updated README.md:
+     - Changed title to "NEAR Intent Swaps MCP Server"
+     - Fixed npm badge URL to point to `@iqai/mcp-near-intent-swaps`
+     - Updated all npx commands to use `@iqai/mcp-near-intent-swaps`
+     - Updated git clone URLs and paths to `mcp-near-intent-swaps`
+     - Updated MCP client configuration examples
+
+4. **Added npm badge validation tests**
+   - Created tests/npm-badges.test.ts with 114 tests:
+     - Tests for each MCP (19 dirs × 5 tests = 95 tests):
+       - should have package.json
+       - should have README.md
+       - npm badge should point to correct package
+       - bin name should be related to package name
+       - repository URL should match directory name
+     - Tests for npm badge format (19 tests)
+   - All 133 tests pass (including 19 existing generate-tools tests)
+
+5. **Verified linting passes**
+   - Ran format to fix code style issues
+   - All files pass lint checks
+
+### Files Modified:
+- mcp-near/package.json (fixed name, bin, repository, homepage, bugs URLs)
+- mcp-near/README.md (fixed npm badge, all package references)
+- mcp-near-intent-swaps/package.json (fixed name, bin, description)
+- mcp-near-intent-swaps/README.md (fixed npm badge, all package references)
+
+### Files Created:
+- mcp-opinion/tests/npm-badges.test.ts (npm badge validation test suite)
+
+### Summary:
+Fixed npm badges in mcp-near and mcp-near-intent-swaps to point to their correct packages. These packages had incorrectly copied content from mcp-near-agent and mcp-near-intents respectively. Added comprehensive test suite to validate npm badges across all 19 MCP directories.
