@@ -39,6 +39,9 @@ importers:
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
+      zod-to-json-schema:
+        specifier: ^3.25.1
+        version: 3.25.1(zod@3.25.7)
 
 packages:
 
@@ -2711,7 +2714,7 @@ snapshots:
   xsschema@0.4.0-beta.5(zod-to-json-schema@3.25.1(zod@3.25.7))(zod@4.3.6):
     optionalDependencies:
       zod: 4.3.6
-      zod-to-json-schema: 3.25.1(zod@4.3.6)
+      zod-to-json-schema: 3.25.1(zod@3.25.7)
 
   y18n@5.0.8: {}
 
@@ -2729,6 +2732,10 @@ snapshots:
       yargs-parser: 22.0.0
 
   yoctocolors@2.1.1: {}
+
+  zod-to-json-schema@3.25.1(zod@3.25.7):
+    dependencies:
+      zod: 3.25.7
 
   zod-to-json-schema@3.25.1(zod@4.3.6):
     dependencies:

@@ -129,7 +129,7 @@ Add the following configuration to your MCP client settings (e.g., `claude_deskt
 **`GET_PRICE_HISTORY`**: Get historical price data for a prediction market token
 - Parameters:
   - `tokenId` (string, required): The token ID to get price history for
-  - `interval` (enum, optional): Time interval: 1m (1 minute), 5m (5 minutes), 1h (1 hour), 1d (1 day) (default: "1h")
+  - `interval` (string, optional): Time interval: 1m (1 minute), 5m (5 minutes), 1h (1 hour), 1d (1 day) (default: "1h")
 
 **`GET_QUOTE_TOKENS`**: Get the list of available quote tokens (currencies) that can be used for trading on Opinion.trade
 - Parameters:
