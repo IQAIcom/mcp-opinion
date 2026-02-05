@@ -1,6 +1,7 @@
 import dedent from "dedent";
 import { z } from "zod";
 import { ClobService } from "../services/clob-service.js";
+import { handleClobError } from "../utils/error-handler.js";
 
 const getOpenOrdersParams = z.object({
 	marketId: z
@@ -81,16 +82,7 @@ export const getOpenOrdersTool = {
         ${JSON.stringify(orderList, null, 2)}
       `;
 		} catch (error) {
-			if (error instanceof Error) {
-				if (error.message.includes("OPINION_PRIVATE_KEY")) {
-					return "Error: OPINION_PRIVATE_KEY environment variable is required for trading operations.";
-				}
-				if (error.message.includes("Python")) {
-					return `Error: ${error.message}. Make sure Python 3 and opinion-clob-sdk are installed (pip install opinion-clob-sdk).`;
-				}
-				return `Error fetching orders: ${error.message}`;
-			}
-			return "An unknown error occurred while fetching orders";
+			return handleClobError(error, "fetching orders");
 		}
 	},
 } as const;
