@@ -117,17 +117,39 @@ def place_order(config: Dict[str, Any], order_data: Dict[str, Any]) -> Dict[str,
     """Place a limit or market order"""
     try:
         client = create_client(config)
-        
+
+        # Validate required fields
+        market_id = order_data.get("marketId")
+        token_id = order_data.get("tokenId")
+        if market_id is None or token_id is None:
+            return {
+                "success": False,
+                "error": "Missing required order parameters: marketId and tokenId are required",
+                "errno": -1,
+                "errmsg": "Missing required order parameters: marketId and tokenId are required",
+            }
+
         # Map order type
         order_type = LIMIT_ORDER if order_data.get("orderType") == "LIMIT" else MARKET_ORDER
-        
-        # Map side
-        side = OrderSide.BUY if order_data.get("side") == "BUY" else OrderSide.SELL
-        
+
+        # Map side with explicit validation
+        side_str = order_data.get("side")
+        if side_str == "BUY":
+            side = OrderSide.BUY
+        elif side_str == "SELL":
+            side = OrderSide.SELL
+        else:
+            return {
+                "success": False,
+                "error": f"Invalid order side: {side_str}. Must be 'BUY' or 'SELL'",
+                "errno": -1,
+                "errmsg": f"Invalid order side: {side_str}. Must be 'BUY' or 'SELL'",
+            }
+
         # Build order input
         order_input = PlaceOrderDataInput(
-            marketId=order_data["marketId"],
-            tokenId=order_data["tokenId"],
+            marketId=market_id,
+            tokenId=token_id,
             side=side,
             orderType=order_type,
             price=order_data.get("price", "0"),
