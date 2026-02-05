@@ -175,9 +175,18 @@ def place_order(config: Dict[str, Any], order_data: Dict[str, Any]) -> Dict[str,
         }
 
 
-def cancel_order(config: Dict[str, Any], order_id: str) -> Dict[str, Any]:
+def cancel_order(config: Dict[str, Any], order_id: Optional[str]) -> Dict[str, Any]:
     """Cancel a single order"""
     try:
+        # Validate required parameter
+        if not order_id:
+            return {
+                "success": False,
+                "error": "Missing required parameter: orderId",
+                "errno": -1,
+                "errmsg": "Missing required parameter: orderId",
+            }
+
         client = create_client(config)
         result = client.cancel_order(order_id)
         
@@ -383,16 +392,7 @@ def main():
         if command == "place_order":
             result = place_order(config, args.get("order", {}))
         elif command == "cancel_order":
-            order_id = args.get("orderId")
-            if not order_id:
-                result = {
-                    "success": False,
-                    "error": "Missing required parameter: orderId",
-                    "errno": -1,
-                    "errmsg": "Missing required parameter: orderId",
-                }
-            else:
-                result = cancel_order(config, order_id)
+            result = cancel_order(config, args.get("orderId"))
         elif command == "cancel_orders_batch":
             result = cancel_orders_batch(config, args.get("orderIds", []))
         elif command == "cancel_all_orders":
