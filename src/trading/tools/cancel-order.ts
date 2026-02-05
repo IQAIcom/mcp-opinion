@@ -1,6 +1,7 @@
 import dedent from "dedent";
 import { z } from "zod";
 import { ClobService } from "../services/clob-service.js";
+import { handleClobError } from "../utils/error-handler.js";
 
 const cancelOrderParams = z.object({
 	orderId: z.string().min(1).describe("The order ID to cancel"),
@@ -36,16 +37,7 @@ export const cancelOrderTool = {
         ${result.data ? `Response: ${JSON.stringify(result.data, null, 2)}` : ""}
       `;
 		} catch (error) {
-			if (error instanceof Error) {
-				if (error.message.includes("OPINION_PRIVATE_KEY")) {
-					return "Error: OPINION_PRIVATE_KEY environment variable is required for trading operations.";
-				}
-				if (error.message.includes("Python")) {
-					return `Error: ${error.message}. Make sure Python 3 and opinion-clob-sdk are installed (pip install opinion-clob-sdk).`;
-				}
-				return `Error cancelling order: ${error.message}`;
-			}
-			return "An unknown error occurred while cancelling the order";
+			return handleClobError(error, "cancelling order");
 		}
 	},
 } as const;
