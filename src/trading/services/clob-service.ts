@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { config } from "../../lib/config.js";
 
@@ -10,7 +10,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const PROJECT_ROOT = join(__dirname, "../../../");
 const PYTHON_SCRIPT = join(PROJECT_ROOT, "scripts/clob_wrapper.py");
-const VENV_PYTHON = join(PROJECT_ROOT, "venv/bin/python3");
+// Cross-platform Python venv path
+const VENV_PYTHON =
+	process.platform === "win32"
+		? join(PROJECT_ROOT, "venv/Scripts/python.exe")
+		: join(PROJECT_ROOT, "venv/bin/python3");
 
 export interface ClobResponse<T = unknown> {
 	success: boolean;
@@ -76,8 +80,11 @@ export class ClobService {
 		const keyWithoutPrefix = privateKey.startsWith("0x")
 			? privateKey.slice(2)
 			: privateKey;
-		
-		if (keyWithoutPrefix.length !== 64 || !/^[0-9a-fA-F]+$/.test(keyWithoutPrefix)) {
+
+		if (
+			keyWithoutPrefix.length !== 64 ||
+			!/^[0-9a-fA-F]+$/.test(keyWithoutPrefix)
+		) {
 			throw new Error(
 				"OPINION_PRIVATE_KEY must be a valid 64-character hexadecimal string (with or without 0x prefix)",
 			);
@@ -93,7 +100,7 @@ export class ClobService {
 			56: "https://bsc-dataseed.binance.org", // BNB Chain mainnet
 			97: "https://data-seed-prebsc-1-s1.binance.org:8545", // BNB Chain testnet
 		};
-		
+
 		this.config = {
 			host: "https://proxy.opinion.trade:8443",
 			apikey: config.opinion.apiKey,
@@ -122,7 +129,7 @@ export class ClobService {
 				rpcUrl: this.config.rpcUrl,
 				privateKey: this.config.privateKey,
 			};
-			
+
 			// Only include multiSigAddr if it's actually set
 			if (this.config.multiSigAddr) {
 				pythonConfig.multiSigAddr = this.config.multiSigAddr;
@@ -139,17 +146,11 @@ export class ClobService {
 				console.error("[DEBUG] Python command:", command);
 				console.error("[DEBUG] Config (private key redacted):", {
 					...pythonConfig,
-					privateKey: pk
-						? `${pk.slice(0, 6)}...${pk.slice(-4)}`
-						: "MISSING",
+					privateKey: pk ? `${pk.slice(0, 6)}...${pk.slice(-4)}` : "MISSING",
 				});
 			}
 
-			const pythonArgs = [
-				PYTHON_SCRIPT,
-				command,
-				JSON.stringify(payload),
-			];
+			const pythonArgs = [PYTHON_SCRIPT, command, JSON.stringify(payload)];
 
 			// Try to use venv Python if available, otherwise fall back to system python3
 			const pythonExecutable = existsSync(VENV_PYTHON)
@@ -175,21 +176,22 @@ export class ClobService {
 				if (code !== 0) {
 					// Enhanced error reporting for debugging
 					let errorMessage = `Python script failed with code ${code}`;
-					
+
 					if (stderr) {
 						errorMessage += `\nSTDERR: ${stderr}`;
 					}
 					if (stdout) {
 						errorMessage += `\nSTDOUT: ${stdout}`;
 					}
-					
+
 					try {
 						const error = JSON.parse(stderr || stdout);
-						errorMessage = error.message || error.error || error.errmsg || errorMessage;
+						errorMessage =
+							error.message || error.error || error.errmsg || errorMessage;
 					} catch {
 						// Not JSON, use raw output
 					}
-					
+
 					reject(new Error(errorMessage));
 					return;
 				}
