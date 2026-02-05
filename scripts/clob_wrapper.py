@@ -383,7 +383,16 @@ def main():
         if command == "place_order":
             result = place_order(config, args.get("order", {}))
         elif command == "cancel_order":
-            result = cancel_order(config, args.get("orderId", ""))
+            order_id = args.get("orderId")
+            if not order_id:
+                result = {
+                    "success": False,
+                    "error": "Missing required parameter: orderId",
+                    "errno": -1,
+                    "errmsg": "Missing required parameter: orderId",
+                }
+            else:
+                result = cancel_order(config, order_id)
         elif command == "cancel_orders_batch":
             result = cancel_orders_batch(config, args.get("orderIds", []))
         elif command == "cancel_all_orders":
