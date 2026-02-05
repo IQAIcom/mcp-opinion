@@ -176,6 +176,19 @@ Search for prediction markets by keyword in the market title
 
 <!-- AUTO-GENERATED TOOLS END -->
 
+### Trading tools (write)
+
+These tools modify state or access wallet-specific data. They are only registered when `OPINION_PRIVATE_KEY` is set. **Never commit or share your private key.**
+
+| Tool | Description |
+|------|-------------|
+| `PLACE_ORDER` | Place a limit or market order |
+| `PLACE_MARKET_ORDER` | Place a market order (executes immediately) |
+| `CANCEL_ORDER` | Cancel an order by ID |
+| `GET_OPEN_ORDERS` | Get your open orders with optional filters |
+| `GET_BALANCES` | Get your token balances |
+| `APPROVE_ALLOWANCES` | Approve quote tokens for trading (required once before placing orders) |
+
 ## 👨‍💻 Development
 
 ### 🏗️ Build Project
