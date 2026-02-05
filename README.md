@@ -35,6 +35,8 @@ pnpm install
 pnpm run build
 ```
 
+**Note:** The Python virtual environment is only needed for trading tools. Read-only tools work without it.
+
 ## ⚡ Running with an MCP Client
 
 Add the following configuration to your MCP client settings (e.g., `claude_desktop_config.json`).
@@ -173,6 +175,19 @@ Search for prediction markets by keyword in the market title
 | `status` | number |  |  | Filter by status: 1=Created, 2=Active, 3=Resolving, 4=Resolved |
 
 <!-- AUTO-GENERATED TOOLS END -->
+
+### Trading tools (write)
+
+These tools modify state or access wallet-specific data. They are only registered when `OPINION_PRIVATE_KEY` is set. **Never commit or share your private key.**
+
+| Tool | Description |
+|------|-------------|
+| `PLACE_ORDER` | Place a limit or market order |
+| `PLACE_MARKET_ORDER` | Place a market order (executes immediately) |
+| `CANCEL_ORDER` | Cancel an order by ID |
+| `GET_OPEN_ORDERS` | Get your open orders with optional filters |
+| `GET_BALANCES` | Get your token balances |
+| `APPROVE_ALLOWANCES` | Approve quote tokens for trading (required once before placing orders) |
 
 ## 👨‍💻 Development
 
