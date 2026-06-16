@@ -29,7 +29,7 @@ npx @iqai/mcp-opinion
 ### 🔧 Build from Source
 
 ```bash
-git clone https://github.com/IQAIcom/mcp-opinion.git
+git clone https://github.com/IQOfficial/mcp-opinion.git
 cd mcp-opinion
 pnpm install
 pnpm run build
